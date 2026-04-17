@@ -1,0 +1,86 @@
+export const GIG_DOCUMENT_TYPES = [
+  {
+    id: 'income-records',
+    title: 'Income Records',
+    shortTitle: 'T4A / Platform Statements',
+    description:
+      'Upload yearly income slips and payout summaries from Uber, DoorDash, Skip, Instacart, and other platforms.',
+    iconKey: 'income',
+    recurring: false,
+    frequencyLabel: 'Yearly',
+    allowsMultiplePerYear: true,
+    examples: ['T4A', 'Uber annual summary', 'DoorDash payout summary', 'Instacart statement'],
+  },
+  {
+    id: 'fuel-receipts',
+    title: 'Fuel Receipts',
+    shortTitle: 'Fuel',
+    description:
+      'Upload fuel receipts used for work-related driving. You may upload many throughout the year.',
+    iconKey: 'fuel',
+    recurring: true,
+    frequencyLabel: 'Recurring',
+    allowsMultiplePerYear: true,
+    examples: ['Gas station receipts', 'Fuel invoices'],
+  },
+  {
+    id: 'mobile-bills',
+    title: 'Mobile Bills',
+    shortTitle: 'Mobile',
+    description:
+      'Upload phone bills used for gig work. Usually monthly, and only the business-use portion may be deductible.',
+    iconKey: 'mobile',
+    recurring: true,
+    frequencyLabel: 'Monthly',
+    allowsMultiplePerYear: true,
+    examples: ['Rogers bill', 'Bell bill', 'Telus bill'],
+  },
+  {
+    id: 'internet-bills',
+    title: 'Internet Bills',
+    shortTitle: 'Internet',
+    description:
+      'Upload internet bills if you use internet for your self-employment work.',
+    iconKey: 'internet',
+    recurring: true,
+    frequencyLabel: 'Monthly',
+    allowsMultiplePerYear: true,
+    examples: ['Home internet bill', 'Business internet bill'],
+  },
+  {
+    id: 'insurance',
+    title: 'Vehicle Insurance',
+    shortTitle: 'Insurance',
+    description:
+      'Upload your vehicle insurance documents. This is usually one main policy document per year.',
+    iconKey: 'insurance',
+    recurring: false,
+    frequencyLabel: 'Usually annual',
+    allowsMultiplePerYear: false,
+    examples: ['Insurance policy document', 'Insurance renewal'],
+  },
+  {
+    id: 'maintenance',
+    title: 'Car Maintenance',
+    shortTitle: 'Maintenance',
+    description:
+      'Upload maintenance and repair bills related to your work vehicle.',
+    iconKey: 'maintenance',
+    recurring: true,
+    frequencyLabel: 'As needed',
+    allowsMultiplePerYear: true,
+    examples: ['Oil change', 'Tire replacement', 'Brake service'],
+  },
+  {
+    id: 'other-deductions',
+    title: 'Other Deductions',
+    shortTitle: 'Other',
+    description:
+      'Upload other self-employment costs such as supplies, tools, parking, or small work-related expenses.',
+    iconKey: 'other',
+    recurring: true,
+    frequencyLabel: 'Recurring',
+    allowsMultiplePerYear: true,
+    examples: ['Supplies', 'Parking', 'Small tools'],
+  },
+];
