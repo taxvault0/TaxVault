@@ -1,0 +1,182 @@
+export const PROVINCES = [
+  'AB',
+  'BC',
+  'MB',
+  'NB',
+  'NL',
+  'NS',
+  'ON',
+  'PE',
+  'QC',
+  'SK',
+  'NT',
+  'NU',
+  'YT',
+];
+
+export const CA_DESIGNATIONS = [
+  'CPA',
+  'CA',
+  'CMA',
+  'CGA',
+  'Other',
+];
+
+export const EXPERTISE_AREAS = [
+  'Personal Tax',
+  'Corporate Tax',
+  'GST/HST',
+  'Payroll',
+  'Bookkeeping',
+  'Audit & Assurance',
+  'Financial Planning',
+  'Estate Planning',
+  'Business Valuation',
+  'Mergers & Acquisitions',
+  'Insolvency',
+  'Forensic Accounting',
+  'International Tax',
+  'US Cross-Border',
+  'Non-Profit Organizations',
+  'Indigenous Organizations',
+  'Real Estate',
+  'Construction',
+  'Technology',
+  'Healthcare',
+  'Legal Professionals',
+  'Entertainment',
+  'Agriculture',
+  'Fishing',
+  'Mining',
+  'Oil & Gas',
+];
+
+export const LANGUAGES = [
+  'English',
+  'French',
+  'Punjabi',
+  'Hindi',
+  'Spanish',
+  'Mandarin',
+  'Cantonese',
+  'Arabic',
+  'Russian',
+  'Persian (Farsi)',
+  'Tagalog (Filipino)',
+  'German',
+  'Italian',
+  'Portuguese',
+  'Vietnamese',
+  'Urdu',
+  'Other',
+];
+export const SERVICE_OFFERINGS = [
+  'Tax Preparation',
+  'Tax Planning',
+  'Bookkeeping',
+  'Payroll',
+  'GST/HST Filing',
+  'Financial Statements',
+  'Audit & Assurance',
+  'Business Advisory',
+];
+export const FIRM_SIZES = ['solo', 'small', 'medium', 'large'];
+
+export const PRACTICE_TYPES = [
+  'Solo Practice',
+  'Partnership',
+  'Professional Corporation',
+  'LLP',
+  'Regional Firm',
+  'National Firm',
+];
+
+export const PRIMARY_CLIENT_TYPES = [
+  'Individuals',
+  'Families',
+  'Small Businesses',
+  'Corporations',
+  'Non-Profits',
+  'Indigenous Organizations',
+  'High-Net-Worth Individuals',
+  'Professionals (Doctors, Lawyers)',
+  'Contractors',
+  'Gig Workers',
+  'Newcomers to Canada',
+  'Seniors',
+  'Students',
+  'Farmers',
+];
+
+export const TAX_SPECIALTIES = [
+  'Personal Income Tax',
+  'Corporate Tax Planning',
+  'GST/HST Returns',
+  'PST Returns',
+  'QST Returns',
+  'Payroll Remittances',
+  'T2 Corporation Returns',
+  'T1 Personal Returns',
+  'T3 Trust Returns',
+  'T4/T4A Preparation',
+  'T5013 Partnership Returns',
+  'Scientific Research & Experimental Development (SR&ED)',
+  'Capital Gains Planning',
+  'Estate Planning',
+  'Tax Litigation',
+  'Voluntary Disclosures',
+  'Tax Audits',
+  'CRA Representation',
+];
+
+export const PROVINCIAL_SPECIALTIES = [
+  'Alberta',
+  'British Columbia',
+  'Manitoba',
+  'New Brunswick',
+  'Newfoundland and Labrador',
+  'Nova Scotia',
+  'Ontario',
+  'Prince Edward Island',
+  'Quebec',
+  'Saskatchewan',
+  'Northwest Territories',
+  'Nunavut',
+  'Yukon',
+  'Multiple Provinces',
+  'All Provinces',
+];
+
+export const ACCOUNTING_SOFTWARE = [
+  'QuickBooks Online',
+  'QuickBooks Desktop',
+  'Xero',
+  'Sage 50',
+  'Sage Intacct',
+  'FreshBooks',
+  'Wave',
+  'Oracle NetSuite',
+  'Microsoft Dynamics',
+  'SAP',
+  'Other',
+];
+
+export const TAX_SOFTWARE = [
+  'Profile',
+  'TaxPrep',
+  'DT Max',
+  'CanTax',
+  'QuickTax',
+  'TurboTax',
+  'UFile',
+  'TaxCycle',
+  'CCH iFirm',
+  'Other',
+];
+
+export const PEER_REVIEW_OUTCOMES = [
+  'pass',
+  'pass_with_conditions',
+  'pending',
+  'other',
+];
