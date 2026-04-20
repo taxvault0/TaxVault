@@ -1,0 +1,9 @@
+export { default as FormField } from './FormField';
+export { default as SpouseFields } from './SpouseFields';
+export { default as PersonalDetails } from './PersonalDetails';
+export { default as IncomeDetails } from './IncomeDetails';
+export { default as AccountDetails } from './AccountDetails';
+export { default as TaxDetails } from './TaxDetails';
+export { default as DeductionsDetails } from './DeductionsDetails';
+export { default as ReviewDetails } from './ReviewDetails';
+export { default as VehiclePurchaseSection } from './VehiclePurchaseSection';
