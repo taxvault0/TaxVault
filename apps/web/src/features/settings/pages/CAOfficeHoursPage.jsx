@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import './CAOfficeHoursSettings.css';
+import './CAOfficeHoursPage.css';
 
 const DAYS = [
   { key: 'monday', label: 'Monday' },
@@ -30,7 +30,7 @@ const formatTime = (value) => {
   return `${String(hour).padStart(2, '0')}:${minute} ${suffix}`;
 };
 
-const CAOfficeHoursSettings = () => {
+const CAOfficeHoursPage = () => {
   const [officeHours, setOfficeHours] = useState(DEFAULT_OFFICE_HOURS);
   const [errors, setErrors] = useState({});
   const [saveMessage, setSaveMessage] = useState('');
@@ -166,10 +166,18 @@ const CAOfficeHoursSettings = () => {
 
       <div className="office-hours-card">
         <div className="office-hours-toolbar">
-          <button type="button" className="secondary-btn" onClick={handleApplyWeekdays}>
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={handleApplyWeekdays}
+          >
             Apply Mon–Fri 9:00 AM – 5:00 PM
           </button>
-          <button type="button" className="secondary-btn" onClick={handleApplyClosedWeekends}>
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={handleApplyClosedWeekends}
+          >
             Close Weekends
           </button>
         </div>
@@ -198,7 +206,9 @@ const CAOfficeHoursSettings = () => {
                         <input
                           type="checkbox"
                           checked={isClosed}
-                          onChange={(e) => handleClosedToggle(key, e.target.checked)}
+                          onChange={(e) =>
+                            handleClosedToggle(key, e.target.checked)
+                          }
                         />
                         <span>Closed</span>
                       </label>
@@ -207,10 +217,16 @@ const CAOfficeHoursSettings = () => {
                     <td>
                       <input
                         type="time"
-                        className={`time-input ${errors[`${key}.open`] || errors[`${key}.range`] ? 'input-error' : ''}`}
+                        className={`time-input ${
+                          errors[`${key}.open`] || errors[`${key}.range`]
+                            ? 'input-error'
+                            : ''
+                        }`}
                         value={row.open}
                         disabled={isClosed}
-                        onChange={(e) => updateDay(key, { open: e.target.value })}
+                        onChange={(e) =>
+                          updateDay(key, { open: e.target.value })
+                        }
                       />
                       {errors[`${key}.open`] && (
                         <p className="field-error">{errors[`${key}.open`]}</p>
@@ -220,10 +236,16 @@ const CAOfficeHoursSettings = () => {
                     <td>
                       <input
                         type="time"
-                        className={`time-input ${errors[`${key}.close`] || errors[`${key}.range`] ? 'input-error' : ''}`}
+                        className={`time-input ${
+                          errors[`${key}.close`] || errors[`${key}.range`]
+                            ? 'input-error'
+                            : ''
+                        }`}
                         value={row.close}
                         disabled={isClosed}
-                        onChange={(e) => updateDay(key, { close: e.target.value })}
+                        onChange={(e) =>
+                          updateDay(key, { close: e.target.value })
+                        }
                       />
                       {errors[`${key}.close`] && (
                         <p className="field-error">{errors[`${key}.close`]}</p>
@@ -242,7 +264,9 @@ const CAOfficeHoursSettings = () => {
         {saveMessage ? (
           <div
             className={`save-message ${
-              saveMessage.toLowerCase().includes('success') ? 'success' : 'error'
+              saveMessage.toLowerCase().includes('success')
+                ? 'success'
+                : 'error'
             }`}
           >
             {saveMessage}
@@ -270,4 +294,4 @@ const CAOfficeHoursSettings = () => {
   );
 };
 
-export default CAOfficeHoursSettings;
+export default CAOfficeHoursPage;

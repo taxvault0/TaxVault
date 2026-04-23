@@ -6,9 +6,6 @@ import {
   ChevronLeft,
   Shield,
   Star,
-  Briefcase,
-  Car,
-  Building2,
   Calendar,
 } from 'lucide-react';
 import Card from 'components/ui/Card';
@@ -23,9 +20,14 @@ const getUserTaxProfile = (user) => {
   if (user?.taxProfile) return user.taxProfile;
 
   return {
-    employment: user?.userType === 'employee' || user?.userType === 'regular' || !user?.userType,
+    employment:
+      user?.userType === 'employee' ||
+      user?.userType === 'regular' ||
+      !user?.userType,
     gigWork: user?.userType === 'gig-worker',
-    selfEmployment: user?.userType === 'self-employed' || user?.userType === 'contractor',
+    selfEmployment:
+      user?.userType === 'self-employed' ||
+      user?.userType === 'contractor',
     incorporatedBusiness:
       user?.userType === 'Business-owner' ||
       user?.userType === 'small-business' ||
@@ -93,7 +95,16 @@ const ConsultationRequest = () => {
   const loadDocuments = async () => {
     try {
       const response = await documentAPI.getDocuments();
-      setAvailableDocs(response.data || []);
+
+      const docs = Array.isArray(response?.data)
+        ? response.data
+        : Array.isArray(response?.data?.documents)
+        ? response.data.documents
+        : Array.isArray(response?.data?.data)
+        ? response.data.data
+        : [];
+
+      setAvailableDocs(docs);
     } catch (error) {
       console.error('Error loading documents:', error);
       setAvailableDocs([]);
@@ -266,91 +277,107 @@ const ConsultationRequest = () => {
     </div>
   );
 
-  const Step2 = () => (
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium">Describe Your Question</h3>
+  const Step2 = () => {
+    const docs = Array.isArray(availableDocs) ? availableDocs : [];
 
-      <Card className="border-primary-100 bg-primary-50">
-        <Card.Body>
-          <p className="text-sm font-medium text-primary-800">Your tax profile</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {profileSummary.map((item) => (
-              <Badge key={item} variant="info">
-                {item}
-              </Badge>
-            ))}
-          </div>
-          {user?.businessName && (
-            <p className="mt-3 text-sm text-primary-700">
-              Business: {user.businessName}
-            </p>
-          )}
-        </Card.Body>
-      </Card>
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-medium">Describe Your Question</h3>
 
-      <Input
-        label="Topic / Subject"
-        placeholder="e.g., Employment + gig income planning for 2026"
-        value={formData.topic}
-        onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
-      />
-
-      <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">
-          Detailed Description
-        </label>
-        <textarea
-          rows="5"
-          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-          placeholder="Describe your question, tax situation, deadlines, and what help you need..."
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-        />
-      </div>
-
-      {(formData.selectedDate || formData.selectedTime) && (
-        <Card className="border-green-100 bg-green-50">
+        <Card className="border-primary-100 bg-primary-50">
           <Card.Body>
-            <div className="flex items-center">
-              <Calendar size={16} className="mr-2 text-green-600" />
-              <p className="text-sm text-green-700">
-                Selected slot: {formData.selectedDate || '—'} {formData.selectedTime || ''}
-              </p>
+            <p className="text-sm font-medium text-primary-800">Your tax profile</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {profileSummary.map((item) => (
+                <Badge key={item} variant="info">
+                  {item}
+                </Badge>
+              ))}
             </div>
+            {user?.businessName && (
+              <p className="mt-3 text-sm text-primary-700">
+                Business: {user.businessName}
+              </p>
+            )}
           </Card.Body>
         </Card>
-      )}
 
-      <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700">
-          Attach Relevant Documents (Optional)
-        </label>
-        <div className="max-h-48 space-y-2 overflow-y-auto">
-          {availableDocs.map((doc) => (
-            <label
-              key={doc.id}
-              className="flex cursor-pointer items-center rounded-lg border p-3 hover:bg-gray-50"
-            >
-              <input
-                type="checkbox"
-                className="mr-3"
-                checked={formData.attachments.includes(doc.id)}
-                onChange={(e) => {
-                  const newAttachments = e.target.checked
-                    ? [...formData.attachments, doc.id]
-                    : formData.attachments.filter((id) => id !== doc.id);
+        <Input
+          label="Topic / Subject"
+          placeholder="e.g., Employment + gig income planning for 2026"
+          value={formData.topic}
+          onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
+        />
 
-                  setFormData({ ...formData, attachments: newAttachments });
-                }}
-              />
-              <FileText size={16} className="mr-2 text-gray-400" />
-              <span className="text-sm">{doc.name}</span>
-            </label>
-          ))}
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700">
+            Detailed Description
+          </label>
+          <textarea
+            rows="5"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            placeholder="Describe your question, tax situation, deadlines, and what help you need..."
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          />
+        </div>
+
+        {(formData.selectedDate || formData.selectedTime) && (
+          <Card className="border-green-100 bg-green-50">
+            <Card.Body>
+              <div className="flex items-center">
+                <Calendar size={16} className="mr-2 text-green-600" />
+                <p className="text-sm text-green-700">
+                  Selected slot: {formData.selectedDate || '—'} {formData.selectedTime || ''}
+                </p>
+              </div>
+            </Card.Body>
+          </Card>
+        )}
+
+        <div>
+          <label className="mb-2 block text-sm font-medium text-gray-700">
+            Attach Relevant Documents (Optional)
+          </label>
+
+          {docs.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+              No documents available to attach yet.
+            </div>
+          ) : (
+            <div className="max-h-48 space-y-2 overflow-y-auto">
+              {docs.map((doc) => {
+                const docId = doc.id || doc._id;
+                const docName = doc.name || doc.fileName || doc.originalName || 'Document';
+
+                return (
+                  <label
+                    key={docId}
+                    className="flex cursor-pointer items-center rounded-lg border p-3 hover:bg-gray-50"
+                  >
+                    <input
+                      type="checkbox"
+                      className="mr-3"
+                      checked={formData.attachments.includes(docId)}
+                      onChange={(e) => {
+                        const newAttachments = e.target.checked
+                          ? [...formData.attachments, docId]
+                          : formData.attachments.filter((id) => id !== docId);
+
+                        setFormData({ ...formData, attachments: newAttachments });
+                      }}
+                    />
+                    <FileText size={16} className="mr-2 text-gray-400" />
+                    <span className="text-sm">{docName}</span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const Step3 = () => (
     <div className="space-y-6">
@@ -525,4 +552,3 @@ const ConsultationRequest = () => {
 };
 
 export default ConsultationRequest;
-

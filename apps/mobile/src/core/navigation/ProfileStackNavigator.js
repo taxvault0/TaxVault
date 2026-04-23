@@ -3,7 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 import TaxProfileScreen from '@/features/taxProfile/screens/TaxProfileScreen';
 import HelpSupportScreen from '@/features/support/screens/HelpSupportScreen';
-import SettingsScreen from '@/features/profile/screens/SettingsScreen';
+import SettingsScreen from '@/features/settings/screens/SettingsScreen';
 import ProfileScreen from '@/features/profile/screens/ProfileScreen';
 
 const Stack = createStackNavigator();

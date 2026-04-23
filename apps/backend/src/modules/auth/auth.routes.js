@@ -21,7 +21,7 @@ const generateToken = (id) => {
   const expiresIn = (process.env.JWT_EXPIRE || '7d').trim();
 
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn
+    expiresIn,
   });
 };
 
@@ -40,6 +40,7 @@ router.post('/register', validate(authValidators.register), async (req, res) => 
       role,
       userType,
       phoneNumber,
+      alternatePhone,
       province,
       firmName,
       caNumber,
@@ -53,37 +54,34 @@ router.post('/register', validate(authValidators.register), async (req, res) => 
       provincialTaxNumber,
       filingFrequency,
       taxRegistrationDate,
-      exceededProvincialThreshold
+      exceededProvincialThreshold,
     } = req.body;
 
     const normalizedEmail = String(email).trim().toLowerCase();
     const normalizedRole = role || 'user';
     const normalizedProvince = province ? String(province).trim().toUpperCase() : 'ON';
 
-    // Check if user exists
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: 'User already exists with this email'
+        message: 'User already exists with this email',
       });
     }
 
-    // Validate province if provided
     if (normalizedProvince && !VALID_PROVINCES.includes(normalizedProvince)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid province selected'
+        message: 'Invalid province selected',
       });
     }
 
-    // Validate business number format based on province
     if (businessNumber && normalizedProvince) {
       const isValid = taxUtils.validateBusinessNumber(businessNumber, normalizedProvince);
       if (!isValid) {
         return res.status(400).json({
           success: false,
-          message: `Invalid business number format for ${normalizedProvince}`
+          message: `Invalid business number format for ${normalizedProvince}`,
         });
       }
     }
@@ -92,14 +90,14 @@ router.post('/register', validate(authValidators.register), async (req, res) => 
       userType ||
       (normalizedRole === 'ca' ? 'professional' : 'other');
 
-    // Create user with all fields
     const userData = {
       name: String(name).trim(),
       email: normalizedEmail,
       password,
       role: normalizedRole,
       userType: safeUserType,
-      phoneNumber,
+      phoneNumber: phoneNumber || '',
+      alternatePhone: alternatePhone || '',
       province: normalizedProvince,
       firmName: firmName || '',
       caNumber: caNumber || '',
@@ -108,10 +106,9 @@ router.post('/register', validate(authValidators.register), async (req, res) => 
       professionalTermsAccepted: !!professionalTermsAccepted,
       termsAcceptedAt: termsAcceptedAt || null,
       profile: profile && typeof profile === 'object' ? profile : {},
-      emailVerified: false
+      isEmailVerified: false,
     };
 
-    // Add optional tax fields if provided
     if (businessNumber) userData.businessNumber = businessNumber;
     if (provincialTaxRegistered !== undefined) {
       userData.provincialTaxRegistered = provincialTaxRegistered;
@@ -125,21 +122,17 @@ router.post('/register', validate(authValidators.register), async (req, res) => 
 
     const user = await User.create(userData);
 
-    // Generate email verification token
     const verificationToken = user.createEmailVerificationToken();
     await user.save({ validateBeforeSave: false });
 
-    // Send welcome email safely
     try {
-      await sendWelcomeEmail(user);
+      await sendWelcomeEmail(user, verificationToken);
     } catch (emailError) {
       console.error('Welcome email failed:', emailError.message);
     }
 
-    // Generate token
     const token = generateToken(user._id);
 
-    // Get tax info based on province
     let taxInfo = {};
     if (user.province) {
       taxInfo = {
@@ -147,7 +140,7 @@ router.post('/register', validate(authValidators.register), async (req, res) => 
         agency: taxUtils.getTaxAgency(user.province).agency,
         requiresSeparateFiling: taxUtils.getTaxAgency(user.province).hasSeparateProvincial,
         rate: taxUtils.calculateTaxes(100, user.province).total,
-        businessNumberFormat: taxUtils.getBusinessNumberFormat(user.province).pattern
+        businessNumberFormat: taxUtils.getBusinessNumberFormat(user.province).pattern,
       };
     }
 
@@ -162,6 +155,7 @@ router.post('/register', validate(authValidators.register), async (req, res) => 
         role: user.role,
         userType: user.userType,
         phoneNumber: user.phoneNumber || '',
+        alternatePhone: user.alternatePhone || '',
         province: user.province,
         firmName: user.firmName || '',
         caNumber: user.caNumber || '',
@@ -170,13 +164,15 @@ router.post('/register', validate(authValidators.register), async (req, res) => 
         privacyAccepted: !!user.privacyAccepted,
         professionalTermsAccepted: !!user.professionalTermsAccepted,
         termsAcceptedAt: user.termsAcceptedAt || null,
-        emailVerified: user.emailVerified,
-        businessNumber: user.businessNumber,
-        provincialTaxRegistered: user.provincialTaxRegistered,
-        provincialTaxNumber: user.provincialTaxNumber,
-        filingFrequency: user.filingFrequency,
-        taxInfo
-      }
+        emailVerified: !!user.isEmailVerified,
+        businessNumber: user.businessNumber || '',
+        provincialTaxRegistered: !!user.provincialTaxRegistered,
+        provincialTaxNumber: user.provincialTaxNumber || '',
+        filingFrequency: user.filingFrequency || '',
+        taxRegistrationDate: user.taxRegistrationDate || null,
+        exceededProvincialThreshold: !!user.exceededProvincialThreshold,
+        taxInfo,
+      },
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -187,15 +183,15 @@ router.post('/register', validate(authValidators.register), async (req, res) => 
         message: 'Validation failed',
         errors: Object.values(error.errors).map((err) => ({
           field: err.path,
-          message: err.message
-        }))
+          message: err.message,
+        })),
       });
     }
 
     res.status(500).json({
       success: false,
       message: 'Error creating user',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 });
@@ -211,7 +207,7 @@ router.put('/profile', protect, async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
     }
 
@@ -219,22 +215,20 @@ router.put('/profile', protect, async (req, res) => {
       updates.province = String(updates.province).trim().toUpperCase();
     }
 
-    // Validate province if being updated
     if (updates.province && !VALID_PROVINCES.includes(updates.province)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid province selected'
+        message: 'Invalid province selected',
       });
     }
 
-    // Validate business number if being updated
     if (updates.businessNumber && (updates.province || user.province)) {
       const provinceToUse = updates.province || user.province;
       const isValid = taxUtils.validateBusinessNumber(updates.businessNumber, provinceToUse);
       if (!isValid) {
         return res.status(400).json({
           success: false,
-          message: `Invalid business number format for ${provinceToUse}`
+          message: `Invalid business number format for ${provinceToUse}`,
         });
       }
     }
@@ -242,15 +236,17 @@ router.put('/profile', protect, async (req, res) => {
     const allowedUpdates = [
       'name',
       'phoneNumber',
+      'alternatePhone',
       'province',
       'businessNumber',
       'provincialTaxRegistered',
       'provincialTaxNumber',
       'filingFrequency',
+      'taxRegistrationDate',
       'exceededProvincialThreshold',
       'firmName',
       'caNumber',
-      'profile'
+      'profile',
     ];
 
     allowedUpdates.forEach((field) => {
@@ -268,7 +264,7 @@ router.put('/profile', protect, async (req, res) => {
         agency: taxUtils.getTaxAgency(user.province).agency,
         requiresSeparateFiling: taxUtils.getTaxAgency(user.province).hasSeparateProvincial,
         rate: taxUtils.calculateTaxes(100, user.province).total,
-        businessNumberFormat: taxUtils.getBusinessNumberFormat(user.province).pattern
+        businessNumberFormat: taxUtils.getBusinessNumberFormat(user.province).pattern,
       };
     }
 
@@ -280,23 +276,26 @@ router.put('/profile', protect, async (req, res) => {
         email: user.email,
         role: user.role,
         userType: user.userType,
-        phoneNumber: user.phoneNumber,
+        phoneNumber: user.phoneNumber || '',
+        alternatePhone: user.alternatePhone || '',
         province: user.province,
         firmName: user.firmName || '',
         caNumber: user.caNumber || '',
         profile: user.profile || {},
-        businessNumber: user.businessNumber,
-        provincialTaxRegistered: user.provincialTaxRegistered,
-        provincialTaxNumber: user.provincialTaxNumber,
-        filingFrequency: user.filingFrequency,
-        taxInfo
-      }
+        businessNumber: user.businessNumber || '',
+        provincialTaxRegistered: !!user.provincialTaxRegistered,
+        provincialTaxNumber: user.provincialTaxNumber || '',
+        filingFrequency: user.filingFrequency || '',
+        taxRegistrationDate: user.taxRegistrationDate || null,
+        exceededProvincialThreshold: !!user.exceededProvincialThreshold,
+        taxInfo,
+      },
     });
   } catch (error) {
     console.error('Profile update error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error updating profile'
+      message: 'Error updating profile',
     });
   }
 });
@@ -311,7 +310,7 @@ router.get('/tax-info', protect, async (req, res) => {
     if (!user || !user.province) {
       return res.status(404).json({
         success: false,
-        message: 'Tax information not available'
+        message: 'Tax information not available',
       });
     }
 
@@ -325,18 +324,18 @@ router.get('/tax-info', protect, async (req, res) => {
       requiresSeparateFiling: user.requiresSeparateProvincialFiling,
       taxType: user.taxType,
       taxRate: user.taxRate,
-      taxRateDisplay: user.taxRateDisplay
+      taxRateDisplay: user.taxRateDisplay,
     };
 
     res.json({
       success: true,
-      taxInfo
+      taxInfo,
     });
   } catch (error) {
     console.error('Tax info error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching tax information'
+      message: 'Error fetching tax information',
     });
   }
 });
@@ -348,51 +347,51 @@ router.post('/login', validate(authValidators.login), async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email: String(email).toLowerCase() })
+    const user = await User.findOne({ email: String(email).trim().toLowerCase() })
       .select('+password +loginAttempts +lockUntil +mfaEnabled +mfaSecret');
 
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: 'Invalid credentials',
       });
     }
 
-    if (user.isLocked()) {
-      const remainingTime = Math.ceil((user.lockUntil - Date.now()) / 1000 / 60);
+    if (typeof user.isLocked === 'function' && user.isLocked()) {
+      const remainingTime = Math.ceil((new Date(user.lockUntil).getTime() - Date.now()) / 1000 / 60);
       return res.status(401).json({
         success: false,
-        message: `Account locked. Try again in ${remainingTime} minutes`
+        message: `Account locked. Try again in ${remainingTime} minutes`,
       });
     }
 
-    const isMatch = await user.comparePassword(password);
+    const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
-      user.loginAttempts += 1;
+      user.loginAttempts = (user.loginAttempts || 0) + 1;
 
       if (user.loginAttempts >= 5) {
-        user.lockUntil = Date.now() + 30 * 60 * 1000;
+        user.lockUntil = new Date(Date.now() + 30 * 60 * 1000);
       }
 
       await user.save({ validateBeforeSave: false });
 
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: 'Invalid credentials',
       });
     }
 
     user.loginAttempts = 0;
-    user.lockUntil = undefined;
-    user.lastLogin = Date.now();
+    user.lockUntil = null;
+    user.lastLogin = new Date();
     await user.save({ validateBeforeSave: false });
 
     if (user.mfaEnabled) {
       return res.json({
         success: true,
         requiresMfa: true,
-        userId: user._id
+        userId: user._id,
       });
     }
 
@@ -403,7 +402,7 @@ router.post('/login', validate(authValidators.login), async (req, res) => {
       taxInfo = {
         display: taxUtils.getTaxDisplayString(user.province),
         agency: taxUtils.getTaxAgency(user.province).agency,
-        requiresSeparateFiling: taxUtils.getTaxAgency(user.province).hasSeparateProvincial
+        requiresSeparateFiling: taxUtils.getTaxAgency(user.province).hasSeparateProvincial,
       };
     }
 
@@ -416,22 +415,22 @@ router.post('/login', validate(authValidators.login), async (req, res) => {
         email: user.email,
         role: user.role,
         userType: user.userType,
-        mfaEnabled: user.mfaEnabled,
+        mfaEnabled: !!user.mfaEnabled,
         province: user.province,
         firmName: user.firmName || '',
         caNumber: user.caNumber || '',
         profile: user.profile || {},
-        businessNumber: user.businessNumber,
-        provincialTaxRegistered: user.provincialTaxRegistered,
-        filingFrequency: user.filingFrequency,
-        taxInfo
-      }
+        businessNumber: user.businessNumber || '',
+        provincialTaxRegistered: !!user.provincialTaxRegistered,
+        filingFrequency: user.filingFrequency || '',
+        taxInfo,
+      },
     });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error during login'
+      message: 'Error during login',
     });
   }
 });
@@ -448,7 +447,7 @@ router.post('/verify-mfa', validate(authValidators.verifyMfa), async (req, res) 
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
     }
 
@@ -470,8 +469,8 @@ router.post('/verify-mfa', validate(authValidators.verifyMfa), async (req, res) 
             id: user._id,
             name: user.name,
             email: user.email,
-            role: user.role
-          }
+            role: user.role,
+          },
         });
       }
     }
@@ -480,13 +479,13 @@ router.post('/verify-mfa', validate(authValidators.verifyMfa), async (req, res) 
       secret: user.mfaSecret,
       encoding: 'base32',
       token,
-      window: 1
+      window: 1,
     });
 
     if (!verified) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid MFA token'
+        message: 'Invalid MFA token',
       });
     }
 
@@ -499,14 +498,14 @@ router.post('/verify-mfa', validate(authValidators.verifyMfa), async (req, res) 
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role
-      }
+        role: user.role,
+      },
     });
   } catch (error) {
     console.error('MFA verification error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error verifying MFA'
+      message: 'Error verifying MFA',
     });
   }
 });
@@ -516,23 +515,23 @@ router.post('/verify-mfa', validate(authValidators.verifyMfa), async (req, res) 
 // @access  Private
 router.post('/setup-mfa', protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('+mfaSecret');
+    const user = await User.findById(req.user.id).select('+mfaSecret +mfaBackupCodes');
 
     const secret = speakeasy.generateSecret({
-      name: `TaxVault Canada (${req.user.email})`
+      name: `TaxVault Canada (${req.user.email})`,
     });
 
     const backupCodes = [];
     for (let i = 0; i < 10; i++) {
       backupCodes.push({
         code: crypto.randomBytes(4).toString('hex').toUpperCase(),
-        used: false
+        used: false,
       });
     }
 
     user.mfaSecret = secret.base32;
     user.mfaBackupCodes = backupCodes;
-    await user.save();
+    await user.save({ validateBeforeSave: false });
 
     const qrCode = await QRCode.toDataURL(secret.otpauth_url);
 
@@ -540,13 +539,13 @@ router.post('/setup-mfa', protect, async (req, res) => {
       success: true,
       secret: secret.base32,
       qrCode,
-      backupCodes: backupCodes.map((c) => c.code)
+      backupCodes: backupCodes.map((c) => c.code),
     });
   } catch (error) {
     console.error('MFA setup error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error setting up MFA'
+      message: 'Error setting up MFA',
     });
   }
 });
@@ -557,34 +556,41 @@ router.post('/setup-mfa', protect, async (req, res) => {
 router.post('/enable-mfa', protect, validate(authValidators.verifyMfa), async (req, res) => {
   try {
     const { token } = req.body;
-    const user = await User.findById(req.user.id).select('+mfaSecret');
+    const user = await User.findById(req.user.id).select('+mfaSecret +mfaEnabled');
+
+    if (!user || !user.mfaSecret) {
+      return res.status(400).json({
+        success: false,
+        message: 'MFA is not set up for this account',
+      });
+    }
 
     const verified = speakeasy.totp.verify({
       secret: user.mfaSecret,
       encoding: 'base32',
       token,
-      window: 1
+      window: 1,
     });
 
     if (!verified) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid MFA token'
+        message: 'Invalid MFA token',
       });
     }
 
     user.mfaEnabled = true;
-    await user.save();
+    await user.save({ validateBeforeSave: false });
 
     res.json({
       success: true,
-      message: 'MFA enabled successfully'
+      message: 'MFA enabled successfully',
     });
   } catch (error) {
     console.error('Enable MFA error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error enabling MFA'
+      message: 'Error enabling MFA',
     });
   }
 });
@@ -594,22 +600,22 @@ router.post('/enable-mfa', protect, validate(authValidators.verifyMfa), async (r
 // @access  Private
 router.post('/disable-mfa', protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('+mfaSecret');
+    const user = await User.findById(req.user.id).select('+mfaSecret +mfaEnabled +mfaBackupCodes');
 
     user.mfaEnabled = false;
-    user.mfaSecret = undefined;
-    user.mfaBackupCodes = undefined;
-    await user.save();
+    user.mfaSecret = null;
+    user.mfaBackupCodes = [];
+    await user.save({ validateBeforeSave: false });
 
     res.json({
       success: true,
-      message: 'MFA disabled successfully'
+      message: 'MFA disabled successfully',
     });
   } catch (error) {
     console.error('Disable MFA error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error disabling MFA'
+      message: 'Error disabling MFA',
     });
   }
 });
@@ -618,25 +624,25 @@ router.post('/disable-mfa', protect, async (req, res) => {
 // @route   POST /api/auth/forgot-password
 // @access  Public
 router.post('/forgot-password', [
-  body('email').isEmail().withMessage('Please provide a valid email')
+  body('email').isEmail().withMessage('Please provide a valid email'),
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({
       success: false,
-      errors: errors.array()
+      errors: errors.array(),
     });
   }
 
   try {
     const { email } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: String(email).trim().toLowerCase() }).select('+passwordResetToken +passwordResetExpires');
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'No user found with that email'
+        message: 'No user found with that email',
       });
     }
 
@@ -647,13 +653,13 @@ router.post('/forgot-password', [
 
     res.json({
       success: true,
-      message: 'Password reset email sent'
+      message: 'Password reset email sent',
     });
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error sending reset email'
+      message: 'Error sending reset email',
     });
   }
 });
@@ -665,13 +671,13 @@ router.put('/reset-password/:token', [
   param('token').notEmpty().withMessage('Token is required'),
   body('password')
     .matches(STRONG_PASSWORD_REGEX)
-    .withMessage('Password must be at least 8 characters and include uppercase, lowercase, number, and special character')
+    .withMessage('Password must be at least 8 characters and include uppercase, lowercase, number, and special character'),
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({
       success: false,
-      errors: errors.array()
+      errors: errors.array(),
     });
   }
 
@@ -686,30 +692,30 @@ router.put('/reset-password/:token', [
 
     const user = await User.findOne({
       passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: Date.now() }
-    });
+      passwordResetExpires: { $gt: Date.now() },
+    }).select('+password +passwordResetToken +passwordResetExpires');
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired token'
+        message: 'Invalid or expired token',
       });
     }
 
     user.password = password;
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
+    user.passwordResetToken = null;
+    user.passwordResetExpires = null;
     await user.save();
 
     res.json({
       success: true,
-      message: 'Password reset successful'
+      message: 'Password reset successful',
     });
   } catch (error) {
     console.error('Reset password error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error resetting password'
+      message: 'Error resetting password',
     });
   }
 });
@@ -727,29 +733,31 @@ router.get('/verify-email/:token', async (req, res) => {
       .digest('hex');
 
     const user = await User.findOne({
-      emailVerificationToken: hashedToken
-    });
+      emailVerificationToken: hashedToken,
+      emailVerificationExpire: { $gt: Date.now() },
+    }).select('+emailVerificationToken +emailVerificationExpire');
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid verification token'
+        message: 'Invalid or expired verification token',
       });
     }
 
-    user.emailVerified = true;
-    user.emailVerificationToken = undefined;
+    user.isEmailVerified = true;
+    user.emailVerificationToken = null;
+    user.emailVerificationExpire = null;
     await user.save({ validateBeforeSave: false });
 
     res.json({
       success: true,
-      message: 'Email verified successfully'
+      message: 'Email verified successfully',
     });
   } catch (error) {
     console.error('Email verification error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error verifying email'
+      message: 'Error verifying email',
     });
   }
 });
@@ -769,7 +777,7 @@ router.get('/me', protect, async (req, res) => {
         display: taxUtils.getTaxDisplayString(user.province),
         agency: taxUtils.getTaxAgency(user.province).agency,
         requiresSeparateFiling: taxUtils.getTaxAgency(user.province).hasSeparateProvincial,
-        rate: taxUtils.calculateTaxes(100, user.province).total
+        rate: taxUtils.calculateTaxes(100, user.province).total,
       };
     }
 
@@ -777,14 +785,15 @@ router.get('/me', protect, async (req, res) => {
       success: true,
       user: {
         ...user,
-        taxInfo
-      }
+        emailVerified: !!user.isEmailVerified,
+        taxInfo,
+      },
     });
   } catch (error) {
     console.error('Get me error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching user'
+      message: 'Error fetching user',
     });
   }
 });
@@ -795,7 +804,7 @@ router.get('/me', protect, async (req, res) => {
 router.post('/logout', protect, (req, res) => {
   res.json({
     success: true,
-    message: 'Logged out successfully'
+    message: 'Logged out successfully',
   });
 });
 

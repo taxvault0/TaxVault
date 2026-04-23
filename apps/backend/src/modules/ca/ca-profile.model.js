@@ -1,5 +1,18 @@
 const mongoose = require('mongoose');
 
+const availabilitySlotSchema = new mongoose.Schema(
+  {
+    start: { type: Date, required: true },
+    end: { type: Date },
+    type: {
+      type: String,
+      enum: ['Consultation', 'In-Person', 'Virtual'],
+      default: 'Consultation',
+    },
+  },
+  { _id: false }
+);
+
 const caProfileSchema = new mongoose.Schema(
   {
     user: {
@@ -21,6 +34,7 @@ const caProfileSchema = new mongoose.Schema(
     yearAdmitted: { type: Number },
     peerReviewDate: { type: Date },
 
+    // 📍 ADDRESS
     address: {
       street: { type: String, default: '' },
       city: { type: String, default: '' },
@@ -29,6 +43,7 @@ const caProfileSchema = new mongoose.Schema(
       country: { type: String, default: 'Canada' },
     },
 
+    // 🌍 GEO LOCATION (CRITICAL for distance search)
     location: {
       type: {
         type: String,
@@ -36,7 +51,7 @@ const caProfileSchema = new mongoose.Schema(
         default: 'Point',
       },
       coordinates: {
-        type: [Number],
+        type: [Number], // [lng, lat]
         default: [0, 0],
       },
     },
@@ -55,7 +70,20 @@ const caProfileSchema = new mongoose.Schema(
 
     hoursOfOperation: { type: Object, default: {} },
 
+    // 💰 PRICE (NEW)
+    minimumFee: { type: Number, default: null },
+    maximumFee: { type: Number, default: null },
+
+    // 📅 AVAILABILITY (NEW)
+    availability: {
+      type: [availabilitySlotSchema],
+      default: [],
+    },
+
+    nextAvailable: { type: Date, default: null },
+
     acceptingNewClients: { type: Boolean, default: true },
+
     availabilityStatus: {
       type: String,
       enum: ['active', 'not-accepting'],
@@ -73,6 +101,10 @@ const caProfileSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+
+// 🚨 CRITICAL FOR GEO SEARCH
+caProfileSchema.index({ location: '2dsphere' });
 
 module.exports =
   mongoose.models.CAProfile ||

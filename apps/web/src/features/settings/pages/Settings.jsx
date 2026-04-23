@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Bell,
   Shield,
@@ -15,7 +16,6 @@ import {
   Monitor,
   FileText,
   ChevronRight,
-  Check,
   AlertTriangle,
   Building2,
   Briefcase,
@@ -26,6 +26,7 @@ import {
   Palette,
   Database,
   BadgeHelp,
+  Clock3,
 } from 'lucide-react';
 import Card from 'components/ui/Card';
 import Button from 'components/ui/Button';
@@ -37,20 +38,47 @@ const ROLE_LABELS = {
   tax_client: 'Tax Client',
 };
 
-const DEFAULT_SECTIONS = [
-  { id: 'account', label: 'Account', icon: User },
-  { id: 'security', label: 'Security', icon: Shield },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'preferences', label: 'Preferences', icon: Globe },
-  { id: 'privacy', label: 'Privacy', icon: Lock },
-  { id: 'integrations', label: 'Integrations', icon: Plug },
-  { id: 'billing', label: 'Billing', icon: CreditCard },
-  { id: 'danger', label: 'Danger Zone', icon: Trash2, danger: true },
-];
+const buildSections = (role) => {
+  const sections = [
+    { id: 'account', label: 'Account', icon: User },
+    { id: 'security', label: 'Security', icon: Shield },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'preferences', label: 'Preferences', icon: Globe },
+    { id: 'privacy', label: 'Privacy', icon: Lock },
+    { id: 'integrations', label: 'Integrations', icon: Plug },
+    { id: 'billing', label: 'Billing', icon: CreditCard },
+  ];
+
+  if (role === 'ca') {
+    sections.push({
+      id: 'office-hours',
+      label: 'Office Hours',
+      icon: Clock3,
+    });
+  }
+
+  sections.push({
+    id: 'danger',
+    label: 'Danger Zone',
+    icon: Trash2,
+    danger: true,
+  });
+
+  return sections;
+};
 
 const getRoleLabel = (user) => ROLE_LABELS[user?.role] || 'Tax Client';
 
 const SettingsPage = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const role = user?.role || 'tax_client';
+
+  const [activeSection, setActiveSection] = useState('account');
+  const [saveState, setSaveState] = useState('idle');
+
+  const sections = useMemo(() => buildSections(role), [role]);
+
   const scrollToSection = (sectionId) => {
     setActiveSection(sectionId);
 
@@ -61,10 +89,6 @@ const SettingsPage = () => {
       }
     }
   };
-  const { user, logout } = useAuth();
-  const role = user?.role || 'tax_client';
-  const [activeSection, setActiveSection] = useState('account');
-  const [saveState, setSaveState] = useState('idle');
 
   const [settings, setSettings] = useState({
     account: {
@@ -114,7 +138,12 @@ const SettingsPage = () => {
       payrollConnected: false,
     },
     billing: {
-      plan: role === 'ca' ? 'Professional Plan' : role === 'business_owner' ? 'Business Plan' : 'Starter Plan',
+      plan:
+        role === 'ca'
+          ? 'Professional Plan'
+          : role === 'business_owner'
+          ? 'Business Plan'
+          : 'Starter Plan',
       renewalDate: '2026-12-31',
       autoRenew: true,
       paymentMethod: 'Visa ending in 4242',
@@ -143,12 +172,21 @@ const SettingsPage = () => {
     if (role === 'ca') {
       return {
         title: 'Professional Preferences',
-        description: 'Manage how clients discover your profile and how intake works.',
+        description:
+          'Manage how clients discover your profile and how intake works.',
         icon: Briefcase,
         cards: [
-          { label: 'Booking visibility', value: settings.roleSettings.ca.bookingVisibility ? 'Enabled' : 'Disabled' },
+          {
+            label: 'Booking visibility',
+            value: settings.roleSettings.ca.bookingVisibility
+              ? 'Enabled'
+              : 'Disabled',
+          },
           { label: 'Intake mode', value: settings.roleSettings.ca.intakeMode },
-          { label: 'Firm profile', value: settings.roleSettings.ca.firmProfileStatus },
+          {
+            label: 'Firm profile',
+            value: settings.roleSettings.ca.firmProfileStatus,
+          },
         ],
       };
     }
@@ -156,24 +194,47 @@ const SettingsPage = () => {
     if (role === 'business_owner') {
       return {
         title: 'Business Settings',
-        description: 'Manage accounting workflows and business-specific defaults.',
+        description:
+          'Manage accounting workflows and business-specific defaults.',
         icon: Building2,
         cards: [
-          { label: 'Business profile', value: settings.roleSettings.businessOwner.businessProfile },
-          { label: 'GST workflow', value: settings.roleSettings.businessOwner.gstWorkflow ? 'Enabled' : 'Disabled' },
-          { label: 'Expense review', value: settings.roleSettings.businessOwner.expenseReviewMode },
+          {
+            label: 'Business profile',
+            value: settings.roleSettings.businessOwner.businessProfile,
+          },
+          {
+            label: 'GST workflow',
+            value: settings.roleSettings.businessOwner.gstWorkflow
+              ? 'Enabled'
+              : 'Disabled',
+          },
+          {
+            label: 'Expense review',
+            value: settings.roleSettings.businessOwner.expenseReviewMode,
+          },
         ],
       };
     }
 
     return {
       title: 'Tax Preferences',
-      description: 'Control personal tax workflow defaults and reminders.',
+      description:
+        'Control personal tax workflow defaults and reminders.',
       icon: FileText,
       cards: [
-        { label: 'Default tax year', value: settings.roleSettings.taxClient.defaultTaxYear },
-        { label: 'Assigned tax professional', value: settings.roleSettings.taxClient.assignedTaxProfessionalVisibility },
-        { label: 'Document reminders', value: settings.roleSettings.taxClient.documentReminders },
+        {
+          label: 'Default tax year',
+          value: settings.roleSettings.taxClient.defaultTaxYear,
+        },
+        {
+          label: 'Assigned tax professional',
+          value:
+            settings.roleSettings.taxClient.assignedTaxProfessionalVisibility,
+        },
+        {
+          label: 'Document reminders',
+          value: settings.roleSettings.taxClient.documentReminders,
+        },
       ],
     };
   }, [role, settings.roleSettings]);
@@ -250,7 +311,7 @@ const SettingsPage = () => {
         <div className="lg:col-span-4 xl:col-span-3">
           <Card className="sticky top-6">
             <Card.Body className="space-y-2 p-4">
-              {DEFAULT_SECTIONS.map((section) => (
+              {sections.map((section) => (
                 <SidebarItem
                   key={section.id}
                   icon={section.icon}
@@ -614,6 +675,39 @@ const SettingsPage = () => {
             </div>
           </SettingsSection>
 
+          {role === 'ca' && (
+            <SettingsSection
+              id="office-hours"
+              active={activeSection === 'office-hours'}
+              icon={Clock3}
+              title="Office Hours"
+              description="Manage your weekly availability and consultation timings."
+            >
+              <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-xl bg-gray-100 p-2 text-gray-700">
+                      <Clock3 size={18} />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Office Hours</h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Set the hours when clients can book or expect your practice to be available.
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/ca/settings/office-hours')}
+                  >
+                    Manage Office Hours
+                  </Button>
+                </div>
+              </div>
+            </SettingsSection>
+          )}
+
           <SettingsSection
             id="role"
             active={false}
@@ -669,7 +763,14 @@ const SettingsPage = () => {
                     title="GST Workflow"
                     description="Enable GST-related review flows."
                     checked={settings.roleSettings.businessOwner.gstWorkflow}
-                    onToggle={() => updateNestedSetting('roleSettings', 'businessOwner', 'gstWorkflow', !settings.roleSettings.businessOwner.gstWorkflow)}
+                    onToggle={() =>
+                      updateNestedSetting(
+                        'roleSettings',
+                        'businessOwner',
+                        'gstWorkflow',
+                        !settings.roleSettings.businessOwner.gstWorkflow
+                      )
+                    }
                   />
                 </div>
               </div>
@@ -695,7 +796,14 @@ const SettingsPage = () => {
                     title="Booking Visibility"
                     description="Let clients discover your booking link."
                     checked={settings.roleSettings.ca.bookingVisibility}
-                    onToggle={() => updateNestedSetting('roleSettings', 'ca', 'bookingVisibility', !settings.roleSettings.ca.bookingVisibility)}
+                    onToggle={() =>
+                      updateNestedSetting(
+                        'roleSettings',
+                        'ca',
+                        'bookingVisibility',
+                        !settings.roleSettings.ca.bookingVisibility
+                      )
+                    }
                   />
                 </div>
               </div>

@@ -33,7 +33,14 @@ const SettingsScreen = ({ navigation }) => {
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [biometric, setBiometric] = useState(false);
 
-  const SettingItem = ({ icon, label, value, onValueChange, type = 'switch', noBorder = false }) => (
+  const SettingItem = ({
+    icon,
+    label,
+    value,
+    onValueChange,
+    type = 'switch',
+    noBorder = false,
+  }) => (
     <View style={[styles.settingItem, noBorder && styles.noBorder]}>
       <View style={styles.settingLeft}>
         <Icon name={icon} size={22} color={colors.primary[500]} />
@@ -48,7 +55,10 @@ const SettingsScreen = ({ navigation }) => {
           thumbColor={colors.white}
         />
       ) : (
-        <TouchableOpacity onPress={onValueChange} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+        <TouchableOpacity
+          onPress={onValueChange}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
           <Icon name="chevron-right" size={22} color={colors.gray[400]} />
         </TouchableOpacity>
       )}
@@ -76,7 +86,11 @@ const SettingsScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <Header title="Settings" showBack={!!navigation?.canGoBack?.()} />
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Appearance */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Appearance</Text>
           <SettingItem
@@ -88,6 +102,7 @@ const SettingsScreen = ({ navigation }) => {
           />
         </View>
 
+        {/* Notifications */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Notifications</Text>
           <SettingItem
@@ -105,6 +120,7 @@ const SettingsScreen = ({ navigation }) => {
           />
         </View>
 
+        {/* Security */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Security</Text>
           <SettingItem
@@ -117,34 +133,56 @@ const SettingsScreen = ({ navigation }) => {
             icon="lock-outline"
             label="Change Password"
             type="link"
-            onValueChange={() => Alert.alert('Coming Soon', 'Password change coming soon')}
+            onValueChange={() =>
+              Alert.alert('Coming Soon', 'Password change coming soon')
+            }
             noBorder
           />
         </View>
 
+        {/* ✅ NEW: Practice (Office Hours) */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Practice</Text>
+          <SettingItem
+            icon="clock-outline"
+            label="Office Hours"
+            type="link"
+            onValueChange={() => navigation.navigate('CAOfficeHours')}
+            noBorder
+          />
+        </View>
+
+        {/* About */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About</Text>
           <SettingItem
             icon="information-outline"
             label="App Version"
             type="link"
-            onValueChange={() => Alert.alert('Version', 'TaxVault App v1.0.0')}
+            onValueChange={() =>
+              Alert.alert('Version', 'TaxVault App v1.0.0')
+            }
           />
           <SettingItem
             icon="file-document-outline"
             label="Terms & Conditions"
             type="link"
-            onValueChange={() => Alert.alert('Terms', 'Terms and conditions coming soon')}
+            onValueChange={() =>
+              Alert.alert('Terms', 'Terms and conditions coming soon')
+            }
           />
           <SettingItem
             icon="shield-outline"
             label="Privacy Policy"
             type="link"
-            onValueChange={() => Alert.alert('Privacy', 'Privacy policy coming soon')}
+            onValueChange={() =>
+              Alert.alert('Privacy', 'Privacy policy coming soon')
+            }
             noBorder
           />
         </View>
 
+        {/* Logout */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Icon name="logout" size={22} color={colors.error} />
           <Text style={styles.logoutText}>Log Out</Text>

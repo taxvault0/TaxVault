@@ -15,7 +15,8 @@ import ClientSearchScreen from '@/features/ca/screens/ClientSearchScreen';
 import QRScannerScreen from '@/features/ca/screens/QRScannerScreen';
 
 import CameraScreen from '@/features/common/screens/CameraScreen';
-import SettingsScreen from '@/features/profile/screens/SettingsScreen';
+import SettingsScreen from '@/features/settings/screens/SettingsScreen';
+import CAOfficeHoursScreen from '@/features/settings/screens/CAOfficeHoursScreen';
 import DocumentsScreen from '@/features/documents/screens/DocumentsScreen';
 import IncomeDocumentsScreen from '@/features/documents/screens/IncomeDocumentsScreen';
 import VehicleExpensesScreen from '@/features/documents/screens/VehicleExpensesScreen';
@@ -52,6 +53,7 @@ const CAStackNavigator = () => {
       />
 
       <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="CAOfficeHours" component={CAOfficeHoursScreen} />
       <Stack.Screen name="Documents" component={DocumentsScreen} />
       <Stack.Screen name="IncomeDocuments" component={IncomeDocumentsScreen} />
       <Stack.Screen name="VehicleExpenses" component={VehicleExpensesScreen} />

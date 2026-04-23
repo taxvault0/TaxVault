@@ -40,7 +40,7 @@ import MileageTracker from '../../features/mileage/pages/MileageTracker';
 import TripDetail from '../../features/mileage/pages/TripDetail';
 import Documents from '../../features/documents/pages/Documents';
 import Profile from '../../features/profile/pages/Profile';
-import Settings from '../../features/profile/pages/Settings';
+import Settings from '../../features/settings/pages/Settings';
 import AccountDocuments from '../../features/documents/pages/AccountDocuments';
 import TaxChecklist from '../../features/tax/pages/TaxChecklist';
 import FindCA from '../../features/directory/pages/FindCA';
@@ -51,6 +51,7 @@ import ConsultationRequest from '../../features/consultations/pages/Consultation
 import ConsultationDetail from '../../features/consultations/pages/ConsultationDetail';
 import CAAvailability from '../../features/consultations/pages/CAAvailability';
 import CAPricing from '../../features/ca/pages/CAPricing';
+import CAOfficeHoursPage from '../../features/settings/pages/CAOfficeHoursPage';
 
 // Gig / Tax
 import GSTDashboard from '../../features/dashboard/pages/GSTDashboard';
@@ -83,7 +84,6 @@ import CACalendar from '../../features/ca/pages/CACalendar';
 import CAEarnings from '../../features/ca/pages/CAEarnings';
 import CAReviews from '../../features/ca/pages/CAReviews';
 import ClientFilingSummary from '../../features/ca/pages/ClientFilingSummary';
-import CAOfficeHoursSettings from '../../features/profile/pages/CAOfficeHoursSettings';
 
 const PublicRoutes = () => (
   <Routes>
@@ -535,10 +535,10 @@ const ProtectedRoutes = ({ user, chatOpen, setChatOpen }) => {
           }
         />
         <Route
-          path="/ca/profile/office-hours"
+          path="/ca/settings/office-hours"
           element={
             <PrivateRoute allowedRoles={['ca']}>
-              {renderWithShell(<CAOfficeHoursSettings />)}
+              {renderWithShell(<CAOfficeHoursPage />)}
             </PrivateRoute>
           }
         />

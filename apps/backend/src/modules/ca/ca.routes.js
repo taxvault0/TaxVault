@@ -9,6 +9,7 @@ const caCaseController = require('./ca-case.controller');
 // Public routes
 router.get('/search', caDirectoryController.searchCAs);
 router.get('/profile/:id', caDirectoryController.getCAProfile);
+router.get('/profile/:id/availability', caDirectoryController.getCAAvailability);
 
 // CA profile routes
 router.post('/profile', protect, authorize('ca'), caController.createOrUpdateProfile);

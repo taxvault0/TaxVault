@@ -168,15 +168,4 @@ export const caAPI = {
   acceptInvitation: (token) => api.post(`/ca/accept-invitation/${token}`),
 };
 
-export const reportAPI = {
-  generateReport: (data) => api.post('/reports/generate', data),
-  getReports: () => api.get('/reports'),
-  getReport: (id) => api.get(`/reports/${id}`),
-  downloadReport: (id, format) =>
-    api.get(`/reports/${id}/download`, {
-      params: { format },
-      responseType: 'blob',
-    }),
-};
-
 export default api;
