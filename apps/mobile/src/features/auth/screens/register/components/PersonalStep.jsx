@@ -23,15 +23,10 @@ const Step2Personal = ({
   clearFieldError,
   setFieldRef,
   setFormData,
-  setCustomCity,
-  customCity,
   scrollToField,
-  provinces,
-  provinceCities,
   taxFilingStatuses,
   dependentOptions,
   syncFamilyAndFilingStatus,
-  formatPostalCode,
   GOOGLE_PLACES_API_KEY,
 }) => {
   const needsSpouse =
@@ -45,6 +40,7 @@ const Step2Personal = ({
         'Add personal details, family status, and address information.'
       )}
 
+      {/* DOB */}
       {renderDateField({
         label: 'Date of Birth',
         value: formData.dateOfBirth,
@@ -69,12 +65,7 @@ const Step2Personal = ({
         />
       )}
 
-      {Platform.OS === 'ios' && showDobPicker && (
-        <TouchableOpacity style={styles.doneButton} onPress={() => setShowDobPicker(false)}>
-          <Text style={styles.doneButtonText}>Done</Text>
-        </TouchableOpacity>
-      )}
-
+      {/* SIN */}
       {renderInput({
         label: 'SIN Number',
         value: formData.sin,
@@ -85,8 +76,7 @@ const Step2Personal = ({
         fieldKey: 'sin',
       })}
 
-      <Text style={styles.helperText}>Enter your SIN if available.</Text>
-
+      {/* FAMILY STATUS */}
       <View style={styles.sectionBlock} onLayout={setFieldRef('maritalStatus')}>
         <Text style={styles.blockTitle}>Family Status</Text>
         <View style={styles.chipWrap}>
@@ -99,7 +89,6 @@ const Step2Personal = ({
               ]}
               onPress={() => {
                 clearFieldError('maritalStatus');
-                clearFieldError('taxFilingStatus');
                 syncFamilyAndFilingStatus('maritalStatus', status);
               }}
             >
@@ -119,6 +108,7 @@ const Step2Personal = ({
         )}
       </View>
 
+      {/* DEPENDENTS */}
       {renderPicker({
         label: 'Number of Dependents',
         value: formData.numberOfDependents,
@@ -129,6 +119,7 @@ const Step2Personal = ({
         fieldKey: 'numberOfDependents',
       })}
 
+      {/* SPOUSE */}
       {needsSpouse && (
         <View style={styles.sectionBlock}>
           <Text style={styles.blockTitle}>Spouse Information</Text>
@@ -166,91 +157,67 @@ const Step2Personal = ({
             />
           )}
 
-          {Platform.OS === 'ios' && showSpouseDobPicker && (
-            <TouchableOpacity
-              style={styles.doneButton}
-              onPress={() => setShowSpouseDobPicker(false)}
-            >
-              <Text style={styles.doneButtonText}>Done</Text>
-            </TouchableOpacity>
-          )}
-
           <View style={styles.row}>
             <View style={styles.half}>
               {renderInput({
-                label: 'Spouse SIN (Optional)',
+                label: 'Spouse SIN',
                 value: formData.spouseSin,
                 onChangeText: (text) =>
                   updateField('spouseSin', text.replace(/\D/g, '').slice(0, 9)),
                 placeholder: '123456789',
                 keyboardType: 'number-pad',
-                error: fieldErrors.spouseSin,
-                fieldKey: 'spouseSin',
               })}
             </View>
 
             <View style={styles.half}>
               {renderInput({
-                label: 'Spouse Phone (Optional)',
+                label: 'Spouse Phone',
                 value: formData.spousePhone,
                 onChangeText: (text) =>
                   updateField('spousePhone', formatPhoneNumber(text)),
                 placeholder: '(416) 555-0123',
                 keyboardType: 'phone-pad',
-                error: fieldErrors.spousePhone,
-                fieldKey: 'spousePhone',
               })}
             </View>
           </View>
         </View>
       )}
 
+      {/* ✅ GOOGLE ADDRESS ONLY */}
       <View style={styles.field} onLayout={setFieldRef('address')}>
-        <Text style={styles.label}>Street Address</Text>
+        <Text style={styles.label}>Address *</Text>
+
         <GooglePlacesAutocomplete
-          placeholder="Start typing your address"
+          placeholder="Search your address"
           fetchDetails
           onPress={(data, details = null) => {
-            clearFieldError('address');
-            clearFieldError('province');
-            clearFieldError('city');
-            clearFieldError('postalCode');
-
-            const addressText = details?.formatted_address || data?.description || '';
-            let city = '';
-            let province = '';
-            let postalCode = '';
-
             const components = details?.address_components || [];
 
-            components.forEach((component) => {
-              if (component.types.includes('locality')) city = component.long_name;
-              if (component.types.includes('administrative_area_level_1')) {
-                province = component.long_name;
-              }
-              if (component.types.includes('postal_code')) postalCode = component.long_name;
-            });
+            const get = (type) =>
+              components.find((c) => c.types.includes(type))?.long_name || '';
 
-            setCustomCity(false);
+            const addressData = {
+              formattedAddress: details?.formatted_address || data?.description || '',
+              city: get('locality'),
+              province: get('administrative_area_level_1'),
+              postalCode: get('postal_code'),
+              country: 'Canada',
+              placeId: details?.place_id,
+              lat: details?.geometry?.location?.lat,
+              lng: details?.geometry?.location?.lng,
+            };
 
             setFormData((prev) => ({
               ...prev,
-              address: addressText,
-              city: city || prev.city,
-              province: province || prev.province,
-              postalCode: postalCode ? formatPostalCode(postalCode) : prev.postalCode,
+              addressData,
+              address: addressData.formattedAddress,
+              city: addressData.city,
+              province: addressData.province,
+              postalCode: addressData.postalCode,
               country: 'Canada',
             }));
 
-            requestAnimationFrame(() => scrollToField('province'));
-          }}
-          textInputProps={{
-            value: formData.address,
-            onChangeText: (text) => {
-              clearFieldError('address');
-              updateField('address', text);
-            },
-            placeholderTextColor: colors.gray[400],
+            clearFieldError('address');
           }}
           query={{
             key: GOOGLE_PLACES_API_KEY,
@@ -258,84 +225,15 @@ const Step2Personal = ({
             components: 'country:ca',
           }}
           enablePoweredByContainer={false}
-          keyboardShouldPersistTaps="handled"
-          listViewDisplayed="auto"
           styles={{
-            textInputContainer: styles.googleInputContainer,
-            textInput: [styles.googleInput, fieldErrors.address ? styles.inputError : null],
+            textInput: styles.googleInput,
             listView: styles.googleListView,
-            row: styles.googleRow,
-            description: styles.googleDescription,
           }}
         />
-        {!!fieldErrors.address && <Text style={styles.errorText}>{fieldErrors.address}</Text>}
-      </View>
 
-      {renderPicker({
-        label: 'Province',
-        value: formData.province,
-        onValueChange: (value) => {
-          updateField('province', value);
-          updateField('city', '');
-          setCustomCity(false);
-        },
-        options: provinces,
-        placeholder: 'Select province',
-        error: fieldErrors.province,
-        fieldKey: 'province',
-      })}
-
-      {renderPicker({
-        label: 'City',
-        value: customCity ? 'Other' : formData.city,
-        onValueChange: (value) => {
-          if (value === 'Other') {
-            setCustomCity(true);
-            updateField('city', '');
-            requestAnimationFrame(() => scrollToField('otherCity'));
-          } else {
-            setCustomCity(false);
-            updateField('city', value);
-            requestAnimationFrame(() => scrollToField('postalCode'));
-          }
-        },
-        options: formData.province ? provinceCities[formData.province] || ['Other'] : ['Other'],
-        placeholder: formData.province ? 'Select city' : 'Select province first',
-        error: fieldErrors.city,
-        fieldKey: 'city',
-      })}
-
-      {customCity &&
-        renderInput({
-          label: 'Other City',
-          value: formData.city,
-          onChangeText: (text) => updateField('city', text),
-          placeholder: 'Enter city',
-          error: fieldErrors.city,
-          fieldKey: 'otherCity',
-        })}
-
-      <View style={styles.row}>
-        <View style={styles.half}>
-          {renderInput({
-            label: 'Postal Code',
-            value: formData.postalCode,
-            onChangeText: (text) => updateField('postalCode', formatPostalCode(text)),
-            placeholder: 'M5V 2H1',
-            autoCapitalize: 'characters',
-            error: fieldErrors.postalCode,
-            fieldKey: 'postalCode',
-          })}
-        </View>
-
-        <View style={styles.half}>
-          {renderInput({
-            label: 'Country',
-            value: formData.country,
-            placeholder: 'Canada',
-            editable: false,
-          })}
-        </View>
+        {!!fieldErrors.address && (
+          <Text style={styles.errorText}>{fieldErrors.address}</Text>
+        )}
       </View>
     </Card>
   );

@@ -42,6 +42,7 @@ const RegisterCA = () => {
 
   const [formData, setFormData] = useState({
     ...initialValues,
+    firmAddressData: initialValues.firmAddressData || null,
   });
 
   useEffect(() => {
@@ -53,6 +54,7 @@ const RegisterCA = () => {
 
         const migratedDraft = {
           ...parsedDraft,
+          firmAddressData: parsedDraft.firmAddressData || null,
           city: parsedDraft.city || parsedDraft.firmCity || '',
           province: parsedDraft.province || parsedDraft.firmProvince || '',
           agreeToTerms:
@@ -252,6 +254,7 @@ const RegisterCA = () => {
             country: data.firmCountry,
             firmPhone: data.firmPhone,
             firmEmail: data.firmEmail,
+            addressData: data.firmAddressData || null,
             firmSize:
               data.firmSize === 'small'
                 ? 'Small'

@@ -226,52 +226,58 @@ const FindCA = () => {
   }, []);
 
   const fetchCAs = useCallback(
-    async (override = {}) => {
-      try {
-        setLoading(true);
-        setError('');
+  async (override = {}) => {
+    try {
+      setLoading(true);
+      setError('');
 
-        const params = {
-          q: override.searchTerm ?? searchTerm.trim(),
-          acceptingNewClients:
-            override.acceptingNewClients ?? filters.acceptingNewClients,
-          specialization: override.specialization ?? filters.specialization,
-          province: override.province ?? filters.province,
-          language: override.language ?? filters.language,
-          priceRange: override.priceRange ?? filters.priceRange,
-          maxDistanceKm: override.distance ?? filters.distance,
-          recommendedFor: recommendedSpecializations.join(','),
-        };
+      const params = {
+        q: override.searchTerm ?? searchTerm.trim(),
+        acceptingNewClients:
+          override.acceptingNewClients ?? filters.acceptingNewClients,
+        specialization: override.specialization ?? filters.specialization,
+        province: override.province ?? filters.province,
+        language: override.language ?? filters.language,
+        priceRange: override.priceRange ?? filters.priceRange,
+        maxDistanceKm: override.distance ?? filters.distance,
+        recommendedFor: recommendedSpecializations.join(','),
+      };
 
-        // if (location.lat != null && location.lng != null) {
-        //   params.lat = location.lat;
-        //   params.lng = location.lng;
-        //   params.useGeo = true;
-        // }
+      // Keep geo disabled for now until page is stable
+      // if (location.lat != null && location.lng != null) {
+      //   params.lat = location.lat;
+      //   params.lng = location.lng;
+      //   params.useGeo = true;
+      // }
 
-        const response = await api.get('/ca/search', { params });
+      const response = await api.get('/ca/search', { params });
 
-        const rawResults =
-          response?.data?.data ||
-          response?.data?.results ||
-          response?.data?.cas ||
-          [];
+      const data = Array.isArray(response.data)
+        ? response.data
+        : Array.isArray(response.data?.data)
+        ? response.data.data
+        : Array.isArray(response.data?.results)
+        ? response.data.results
+        : [];
 
-        const mapped = Array.isArray(rawResults)
-          ? rawResults.map(mapBackendCA)
-          : [];
+      const mappedResults = data.map(mapBackendCA);
 
-        setSearchResults(mapped);
-      } catch (err) {
-        console.error('Failed to load CAs:', err);
-        setError(err.response?.data?.message || 'Failed to load CAs');
-        setSearchResults([]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [filters, location.lat, location.lng, mapBackendCA, recommendedSpecializations, searchTerm]
-  );
+      setSearchResults(mappedResults);
+    } catch (err) {
+      console.error('Failed to load CAs:', err);
+      setError(err.response?.data?.message || 'Failed to load CAs');
+      setSearchResults([]);
+    } finally {
+      setLoading(false);
+    }
+  },
+  [
+    filters,
+    mapBackendCA,
+    recommendedSpecializations,
+    searchTerm,
+  ]
+);
 
   const fetchAvailability = useCallback(async (caId) => {
     try {
@@ -542,7 +548,11 @@ const FindCA = () => {
 
               <button
                 type="button"
-                onClick={() => navigate(`/ca-availability/${ca.id}`)}
+                onClick={() =>
+                  navigate(`/ca/${ca.id}/availability`, {
+                    state: { ca },
+                  })
+                }
                 className="flex items-center rounded-lg bg-gray-50 p-3 hover:bg-gray-100"
               >
                 <CalendarDays size={18} className="mr-2 text-primary-500" />
@@ -554,15 +564,24 @@ const FindCA = () => {
               <Button
                 variant="outline"
                 className="flex-1"
-                onClick={() => navigate(`/ca-availability/${ca.id}`)}
+                onClick={() =>
+                  navigate(`/ca/${ca.id}/availability`, {
+                    state: { ca },
+                  })
+                }
               >
                 Check Availability
               </Button>
+
               <Button
                 variant="primary"
                 className="flex-1"
                 disabled={!ca.acceptingNewClients}
-                onClick={() => navigate(`/consultations/request/${ca.id}`)}
+                onClick={() =>
+                  navigate(`/consultations/request/${ca.id}`, {
+                    state: { ca },
+                  })
+                }
               >
                 Request Consultation
               </Button>

@@ -89,6 +89,20 @@ const caRegistrationSchema = new mongoose.Schema(
       },
       postalCode: { type: String, trim: true, default: '' },
       country: { type: String, trim: true, default: 'Canada' },
+      addressData: {
+        formattedAddress: { type: String, trim: true, default: '' },
+        streetNumber: { type: String, trim: true, default: '' },
+        streetName: { type: String, trim: true, default: '' },
+        unit: { type: String, trim: true, default: '' },
+        city: { type: String, trim: true, default: '' },
+        province: { type: String, trim: true, default: '' },
+        postalCode: { type: String, trim: true, default: '' },
+        country: { type: String, trim: true, default: 'Canada' },
+        placeId: { type: String, trim: true, default: '' },
+        lat: { type: Number },
+        lng: { type: Number },
+      },
+
       firmPhone: { type: String, trim: true, default: '', set: normalizePhone },
       firmEmail: { type: String, trim: true, lowercase: true, default: '' },
 

@@ -14,16 +14,19 @@ const consultationSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+
     taxCase: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'TaxCase',
       default: null,
     },
+
     title: {
       type: String,
       trim: true,
       default: '',
     },
+
     consultationType: {
       type: String,
       enum: [
@@ -36,11 +39,13 @@ const consultationSchema = new mongoose.Schema(
       ],
       default: 'initial-review',
     },
+
     mode: {
       type: String,
       enum: ['phone', 'video', 'in-person'],
       default: 'video',
     },
+
     status: {
       type: String,
       enum: [
@@ -54,70 +59,101 @@ const consultationSchema = new mongoose.Schema(
       default: 'requested',
       index: true,
     },
+
+    // 🔥 CORE TIME
     scheduledDate: {
       type: Date,
       required: true,
       index: true,
     },
+
+    // 🔥 NEW: SLOT LOCKING FIELDS
+    availabilitySlotId: {
+      type: mongoose.Schema.Types.ObjectId,
+      default: null,
+      index: true,
+    },
+
+    availabilitySlotStart: {
+      type: Date,
+      default: null,
+    },
+
+    availabilitySlotEnd: {
+      type: Date,
+      default: null,
+    },
+
     durationMinutes: {
       type: Number,
       default: 30,
       min: 15,
       max: 240,
     },
+
     timezone: {
       type: String,
       trim: true,
       default: 'America/Toronto',
     },
+
     notesFromClient: {
       type: String,
       trim: true,
       default: '',
       maxlength: 2000,
     },
+
     notesFromCA: {
       type: String,
       trim: true,
       default: '',
       maxlength: 2000,
     },
+
     meetingLink: {
       type: String,
       trim: true,
       default: '',
     },
+
     location: {
       type: String,
       trim: true,
       default: '',
     },
+
     cancellationReason: {
       type: String,
       trim: true,
       default: '',
       maxlength: 1000,
     },
+
     rescheduleReason: {
       type: String,
       trim: true,
       default: '',
       maxlength: 1000,
     },
+
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
+
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       default: null,
     },
+
     completedAt: {
       type: Date,
       default: null,
     },
+
     cancelledAt: {
       type: Date,
       default: null,
@@ -128,7 +164,14 @@ const consultationSchema = new mongoose.Schema(
   }
 );
 
+// 🔥 INDEXES (IMPORTANT)
 consultationSchema.index({ client: 1, status: 1, scheduledDate: -1 });
 consultationSchema.index({ ca: 1, status: 1, scheduledDate: -1 });
+
+// 🔥 CRITICAL: prevents duplicate booking per slot
+consultationSchema.index(
+  { ca: 1, availabilitySlotId: 1 },
+  { unique: true, sparse: true }
+);
 
 module.exports = mongoose.model('Consultation', consultationSchema);

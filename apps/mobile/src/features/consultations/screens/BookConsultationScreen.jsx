@@ -16,10 +16,11 @@ export default function BookConsultationScreen({ navigation, route }) {
     caId: route?.params?.caId || '',
     consultationType: 'initial-review',
     mode: 'video',
-    scheduledDate: '',
+    scheduledDate: route?.params?.scheduledDate || '',
     durationMinutes: '30',
-    timezone: 'America/Toronto',
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Toronto',
     notesFromClient: '',
+    slotId: route?.params?.slotId || route?.params?.slot?.id || route?.params?.slot?._id || '',
   });
 
   const handleSubmit = async () => {
@@ -33,6 +34,7 @@ export default function BookConsultationScreen({ navigation, route }) {
 
       const payload = {
         ...formData,
+        slotId: formData.slotId,
         durationMinutes: Number(formData.durationMinutes || 30),
       };
 
@@ -42,10 +44,18 @@ export default function BookConsultationScreen({ navigation, route }) {
       navigation?.navigate?.('MyConsultations');
     } catch (error) {
       console.error('BookConsultationScreen error:', error);
-      Alert.alert(
-        'Error',
-        error?.response?.data?.message || 'Failed to book consultation'
-      );
+
+      const message =
+        error?.response?.data?.message || 'Failed to book consultation';
+
+      Alert.alert('Error', message);
+
+      if (error?.response?.status === 409 && formData.caId) {
+        navigation.navigate('CAAvailability', {
+          caId: formData.caId,
+          ca: route?.params?.ca,
+        });
+      }
     } finally {
       setLoading(false);
     }

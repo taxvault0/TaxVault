@@ -9,8 +9,23 @@ const availabilitySlotSchema = new mongoose.Schema(
       enum: ['Consultation', 'In-Person', 'Virtual'],
       default: 'Consultation',
     },
+    status: {
+      type: String,
+      enum: ['available', 'booked', 'blocked'],
+      default: 'available',
+    },
+    bookedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    bookedConsultation: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Consultation',
+      default: null,
+    },
   },
-  { _id: false }
+  { _id: true }
 );
 
 const caProfileSchema = new mongoose.Schema(
@@ -34,7 +49,6 @@ const caProfileSchema = new mongoose.Schema(
     yearAdmitted: { type: Number },
     peerReviewDate: { type: Date },
 
-    // 📍 ADDRESS
     address: {
       street: { type: String, default: '' },
       city: { type: String, default: '' },
@@ -43,7 +57,6 @@ const caProfileSchema = new mongoose.Schema(
       country: { type: String, default: 'Canada' },
     },
 
-    // 🌍 GEO LOCATION (CRITICAL for distance search)
     location: {
       type: {
         type: String,
@@ -51,7 +64,7 @@ const caProfileSchema = new mongoose.Schema(
         default: 'Point',
       },
       coordinates: {
-        type: [Number], // [lng, lat]
+        type: [Number],
         default: [0, 0],
       },
     },
@@ -70,11 +83,9 @@ const caProfileSchema = new mongoose.Schema(
 
     hoursOfOperation: { type: Object, default: {} },
 
-    // 💰 PRICE (NEW)
     minimumFee: { type: Number, default: null },
     maximumFee: { type: Number, default: null },
 
-    // 📅 AVAILABILITY (NEW)
     availability: {
       type: [availabilitySlotSchema],
       default: [],
@@ -102,8 +113,6 @@ const caProfileSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-
-// 🚨 CRITICAL FOR GEO SEARCH
 caProfileSchema.index({ location: '2dsphere' });
 
 module.exports =

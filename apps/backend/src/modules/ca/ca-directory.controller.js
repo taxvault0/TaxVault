@@ -382,11 +382,14 @@ exports.getCAAvailability = async (req, res) => {
 
     const slots = Array.isArray(rawAvailability)
       ? rawAvailability
-          .filter((slot) => slot && slot.start)
+          .filter((slot) => slot && slot.start && (slot.status || 'available') === 'available')
           .map((slot) => ({
+            id: slot._id,
+            _id: slot._id,
             start: slot.start,
             end: slot.end || null,
             type: slot.type || 'Consultation',
+            status: slot.status || 'available',
           }))
       : [];
 

@@ -44,7 +44,7 @@ const ProfileRow = ({ icon, label, value, onPress, danger }) => {
   return <View style={styles.rowCard}>{content}</View>;
 };
 
-const CAProfileScreen = () => {
+const CAProfileScreen = ({ route }) => {
   const navigation = useNavigation();
   const { logout } = useAuth();
 
@@ -115,8 +115,36 @@ const CAProfileScreen = () => {
           onPress={handleLogout}
           danger
         />
+        <View style={styles.actionsRow}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.outlineButton]}
+          activeOpacity={0.85}
+          onPress={() =>
+            navigation.navigate('CAAvailability', {
+              caId: route?.params?.caId,
+              ca: route?.params?.ca,
+            })
+          }
+        >
+          <Text style={styles.outlineButtonText}>Check Availability</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionButton}
+          activeOpacity={0.85}
+          onPress={() =>
+            navigation.navigate('BookConsultation', {
+              caId: route?.params?.caId,
+              ca: route?.params?.ca,
+            })
+          }
+        >
+          <Text style={styles.actionButtonText}>Request Consultation</Text>
+        </TouchableOpacity>
+      </View>
       </ScrollView>
     </View>
+    
   );
 };
 
@@ -238,6 +266,34 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     lineHeight: 18,
   },
+  actionsRow: {
+  flexDirection: 'row',
+  gap: 10,
+  marginTop: 12,
+  marginBottom: 12,
+},
+actionButton: {
+  flex: 1,
+  backgroundColor: '#2563EB',
+  borderRadius: 16,
+  paddingVertical: 13,
+  alignItems: 'center',
+},
+actionButtonText: {
+  color: '#FFFFFF',
+  fontSize: 13,
+  fontWeight: '800',
+},
+outlineButton: {
+  backgroundColor: '#FFFFFF',
+  borderWidth: 1,
+  borderColor: '#2563EB',
+},
+outlineButtonText: {
+  color: '#2563EB',
+  fontSize: 13,
+  fontWeight: '800',
+},
 });
 
 

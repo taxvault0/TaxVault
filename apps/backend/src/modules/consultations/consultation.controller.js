@@ -49,11 +49,11 @@ exports.createConsultation = async (req, res) => {
       message: 'Consultation booked successfully',
       consultation,
     });
-  } catch (error) {
+   } catch (error) {
     console.error('createConsultation error:', error);
-    return res.status(500).json({
+    return res.status(error.statusCode || 500).json({
       success: false,
-      message: 'Failed to book consultation',
+      message: error.message || 'Failed to book consultation',
     });
   }
 };

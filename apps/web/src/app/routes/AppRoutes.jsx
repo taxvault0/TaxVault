@@ -49,7 +49,6 @@ import FindCA from '../../features/directory/pages/FindCA';
 import Consultations from '../../features/consultations/pages/Consultations';
 import ConsultationRequest from '../../features/consultations/pages/ConsultationRequest';
 import ConsultationDetail from '../../features/consultations/pages/ConsultationDetail';
-import CAAvailability from '../../features/consultations/pages/CAAvailability';
 import CAPricing from '../../features/ca/pages/CAPricing';
 import CAOfficeHoursPage from '../../features/settings/pages/CAOfficeHoursPage';
 
@@ -84,6 +83,8 @@ import CACalendar from '../../features/ca/pages/CACalendar';
 import CAEarnings from '../../features/ca/pages/CAEarnings';
 import CAReviews from '../../features/ca/pages/CAReviews';
 import ClientFilingSummary from '../../features/ca/pages/ClientFilingSummary';
+import CAAvailabilityCalendar from '../../features/availability/pages/CAAvailabilityCalendar';
+import CAAvailabilitySettings from '../../features/availability/pages/CAAvailabilitySettings';
 
 const PublicRoutes = () => (
   <Routes>
@@ -96,6 +97,7 @@ const PublicRoutes = () => (
     <Route path="/forgot-password" element={<ForgotPassword />} />
     <Route path="/receipts/:id" element={<ReceiptDetail />} />
     <Route path="*" element={<Navigate to="/" replace />} />
+    
   </Routes>
 );
 
@@ -397,6 +399,14 @@ const ProtectedRoutes = ({ user, chatOpen, setChatOpen }) => {
           }
         />
         <Route
+          path="/ca/settings/availability"
+          element={
+            <PrivateRoute allowedRoles={['ca']}>
+              {renderWithShell(<CAAvailabilitySettings />)}
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/consultations/request/:caId"
           element={
             <PrivateRoute allowedRoles={['user', 'business_owner']}>
@@ -412,15 +422,7 @@ const ProtectedRoutes = ({ user, chatOpen, setChatOpen }) => {
             </PrivateRoute>
           }
         />
-        <Route
-          path="/ca-availability/:caId"
-          element={
-            <PrivateRoute allowedRoles={['user', 'business_owner']}>
-              {renderWithShell(<CAAvailability />)}
-            </PrivateRoute>
-          }
-        />
-
+        
         {/* CA routes */}
         <Route
           path="/ca/dashboard"
@@ -555,6 +557,14 @@ const ProtectedRoutes = ({ user, chatOpen, setChatOpen }) => {
           element={
             <PrivateRoute allowedRoles={['ca']}>
               {renderWithShell(<CAConversation />)}
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/ca/:id/availability"
+          element={
+            <PrivateRoute allowedRoles={['user', 'business_owner']}>
+              {renderWithShell(<CAAvailabilityCalendar />)}
             </PrivateRoute>
           }
         />

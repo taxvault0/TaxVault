@@ -15,8 +15,6 @@ import { useAuth } from '@/features/auth/context/AuthContext';
 import styles from './RegisterScreen.styles';
 
 import {
-  provinces,
-  provinceCities,
   profileOptions,
   employmentStatuses,
   taxFilingStatuses,
@@ -33,7 +31,6 @@ import {
   formatDate,
   calculateAge,
   formatPhoneNumber,
-  formatPostalCode,
   getVehicleUseOptions,
   isValidEmail,
 } from './RegisterScreen.helpers';
@@ -48,117 +45,12 @@ import DeductionsStep from './components/DeductionsStep';
 import ReviewStep from './components/ReviewStep';
 import SelectorModal from './components/SelectorModal';
 
-type BillOfSaleFile = {
-  name?: string;
-  uri?: string;
-  mimeType?: string;
-  size?: number;
-} | null;
-
-type RegisterFormData = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  phone: string;
-  dateOfBirth: string;
-  sin: string;
-  address: string;
-  city: string;
-  province: string;
-  postalCode: string;
-  country: string;
-  taxProfile: {
-    employment: boolean;
-    gigWork: boolean;
-    selfEmployment: boolean;
-    incorporatedBusiness: boolean;
-    unemployed: boolean;
-  };
-  employmentStatus: string;
-  taxFilingStatus: string;
-  maritalStatus: string;
-  numberOfDependents: string;
-  businessName: string;
-  businessType: string;
-  businessNumber: string;
-  yearEstablished: string;
-  numberOfEmployees: string;
-  platforms: string[];
-  averageWeeklyKm: string;
-  employerName: string;
-  employerBusinessNumber: string;
-  employeeId: string;
-  contractType: string;
-  quarterlyFiling: boolean;
-  hasInvestments: boolean;
-  hasRentalIncome: boolean;
-  hasForeignIncome: boolean;
-  hasCrypto: boolean;
-  hasRRSP: boolean;
-  hasFHSA: boolean;
-  hasTFSA: boolean;
-  hasTuition: boolean;
-  hasMedicalExpenses: boolean;
-  hasCharitableDonations: boolean;
-  hasChildCareExpenses: boolean;
-  hasMovingExpenses: boolean;
-  hasUnionDues: boolean;
-  hasToolExpenses: boolean;
-  hasHomeOffice: boolean;
-  hasVehicleExpenses: boolean;
-  spouseName: string;
-  spouseSin: string;
-  spouseDob: string;
-  spousePhone: string;
-  spouseIncome: string;
-  spouseEmploymentStatus: string;
-  spouseJobTitle: string;
-  spouseEmployerName: string;
-  spouseFinancialSituation: string;
-  shareWithSpouse: boolean;
-  spousePlatforms: string[];
-  spouseAverageWeeklyKm: string;
-  spouseContractType: string;
-  spouseQuarterlyFiling: boolean;
-  spouseBusinessName: string;
-  spouseBusinessType: string;
-  spouseBusinessNumber: string;
-  spouseYearEstablished: string;
-  spouseNumberOfEmployees: string;
-  spouseTaxProfile: {
-    employment: boolean;
-    gigWork: boolean;
-    selfEmployment: boolean;
-    incorporatedBusiness: boolean;
-    unemployed: boolean;
-  };
-  agreeToTerms: boolean;
-  agreeToPrivacy: boolean;
-  confirmAccuracy: boolean;
-  documentPreferences: {
-    selectedReceiptCategories: string[];
-  };
-  vehicleInfo: {
-    hasVehiclePurchase: boolean;
-    ownerPerson: string;
-    ownershipType: string;
-    mainUse: string;
-    purchaseDate: string;
-    purchasePrice: string;
-    gstHstPaid: string;
-    vin: string;
-    billOfSale: BillOfSaleFile;
-  };
-};
-
 const GOOGLE_PLACES_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY || '';
 
-const RegisterScreen = ({ navigation }: { navigation: any }) => {
+const RegisterScreen = ({ navigation }) => {
   const { register } = useAuth();
-  const scrollRef = useRef<ScrollView | null>(null);
-  const fieldRefs = useRef<Record<string, number>>({});
+  const scrollRef = useRef(null);
+  const fieldRefs = useRef({});
 
   const [currentStep, setCurrentStep] = useState(1);
   const [showDobPicker, setShowDobPicker] = useState(false);
@@ -168,18 +60,15 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [customCity, setCustomCity] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const [selectorVisible, setSelectorVisible] = useState(false);
   const [selectorTitle, setSelectorTitle] = useState('');
-  const [selectorOptions, setSelectorOptions] = useState<any[]>([]);
+  const [selectorOptions, setSelectorOptions] = useState([]);
   const [selectorValue, setSelectorValue] = useState('');
-  const [selectorFieldKey, setSelectorFieldKey] = useState('');
-  const [selectorOnChange, setSelectorOnChange] =
-    useState<((value: any) => void) | null>(null);
+  const [selectorOnChange, setSelectorOnChange] = useState(null);
 
-  const [formData, setFormData] = useState<RegisterFormData>({
+  const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
@@ -188,11 +77,14 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
     phone: '',
     dateOfBirth: '',
     sin: '',
+
     address: '',
+    addressData: null,
     city: '',
     province: '',
     postalCode: '',
     country: 'Canada',
+
     taxProfile: {
       employment: true,
       gigWork: false,
@@ -204,6 +96,7 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
     taxFilingStatus: '',
     maritalStatus: '',
     numberOfDependents: '0',
+
     businessName: '',
     businessType: '',
     businessNumber: '',
@@ -216,6 +109,7 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
     employeeId: '',
     contractType: '',
     quarterlyFiling: false,
+
     hasInvestments: false,
     hasRentalIncome: false,
     hasForeignIncome: false,
@@ -232,6 +126,7 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
     hasToolExpenses: false,
     hasHomeOffice: false,
     hasVehicleExpenses: false,
+
     spouseName: '',
     spouseSin: '',
     spouseDob: '',
@@ -258,12 +153,15 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
       incorporatedBusiness: false,
       unemployed: false,
     },
+
     agreeToTerms: false,
     agreeToPrivacy: false,
     confirmAccuracy: false,
+
     documentPreferences: {
       selectedReceiptCategories: [],
     },
+
     vehicleInfo: {
       hasVehiclePurchase: false,
       ownerPerson: '',
@@ -284,8 +182,8 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
 
   const visibleSteps = steps;
 
-  const getVehicleOwnerOptions = (data: RegisterFormData): string[] => {
-    const options: string[] = [];
+  const getVehicleOwnerOptions = (data) => {
+    const options = [];
 
     const userEligible =
       data.taxProfile.gigWork ||
@@ -305,7 +203,7 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
     return options;
   };
 
-  const getVehicleUseOptionsByOwner = (data: RegisterFormData): string[] => {
+  const getVehicleUseOptionsByOwner = (data) => {
     if (data.vehicleInfo.ownerPerson === 'Spouse') {
       return getVehicleUseOptions(data.spouseTaxProfile);
     }
@@ -316,26 +214,36 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
     () => getVehicleOwnerOptions(formData),
     [formData]
   );
+
   const vehicleUseOptions = useMemo(
     () => getVehicleUseOptionsByOwner(formData),
     [formData]
   );
 
-  const getNextStep = (step: number) => Math.min(step + 1, steps.length);
-  const getPreviousStep = (step: number) => Math.max(step - 1, 1);
+  const getNextStep = (step) => Math.min(step + 1, steps.length);
+  const getPreviousStep = (step) => Math.max(step - 1, 1);
 
-  const scrollToField = (field: string) => {
+  const scrollToField = (field) => {
     const y = fieldRefs.current[field];
     if (typeof y !== 'number') return;
     scrollRef.current?.scrollTo({ y: Math.max(y - 20, 0), animated: true });
   };
 
-  const updateField = (field: string, value: any) => {
+  const clearFieldError = (field) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const updateField = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     clearFieldError(field);
   };
 
-  const updateVehicleField = (field: string, value: any) => {
+  const updateVehicleField = (field, value) => {
     setFormData((prev) => ({
       ...prev,
       vehicleInfo: {
@@ -363,11 +271,9 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
     }));
   };
 
-  const toggleArrayItem = (field: string, value: string) => {
+  const toggleArrayItem = (field, value) => {
     setFormData((prev) => {
-      const current: string[] = Array.isArray((prev as any)[field])
-        ? (prev as any)[field]
-        : [];
+      const current = Array.isArray(prev[field]) ? prev[field] : [];
       const exists = current.includes(value);
 
       return {
@@ -379,7 +285,7 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
     });
   };
 
-  const toggleReceiptCategory = (value: string) => {
+  const toggleReceiptCategory = (value) => {
     setFormData((prev) => {
       const current = prev.documentPreferences.selectedReceiptCategories;
       const exists = current.includes(value);
@@ -396,9 +302,7 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
     });
   };
 
-  const updateSpouseTaxProfile = (
-    key: keyof RegisterFormData['spouseTaxProfile']
-  ) => {
+  const updateSpouseTaxProfile = (key) => {
     setFormData((prev) => {
       const currentlySelected = !!prev.spouseTaxProfile[key];
 
@@ -442,36 +346,23 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
     value,
     fieldKey,
     onSelect,
-  }: {
-    title: string;
-    options: any[];
-    value: string;
-    fieldKey?: string;
-    onSelect: (selected: any) => void;
   }) => {
     setSelectorTitle(title);
     setSelectorOptions(options);
     setSelectorValue(value);
-    setSelectorFieldKey(fieldKey || '');
-    setSelectorOnChange(() => onSelect);
+    setSelectorOnChange(() => (selected) => {
+      if (fieldKey) clearFieldError(fieldKey);
+      onSelect?.(selected);
+    });
     setSelectorVisible(true);
   };
 
-  const setFieldRef = (field: string) => (event: any) => {
+  const setFieldRef = (field) => (event) => {
     const y = event?.nativeEvent?.layout?.y ?? 0;
     fieldRefs.current[field] = y;
   };
 
-  const clearFieldError = (field: string) => {
-    setFieldErrors((prev) => {
-      if (!prev[field]) return prev;
-      const next = { ...prev };
-      delete next[field];
-      return next;
-    });
-  };
-
-  const syncFamilyAndFilingStatus = (field: string, value: string) => {
+  const syncFamilyAndFilingStatus = (field, value) => {
     if (field === 'taxFilingStatus') {
       updateField('taxFilingStatus', value);
       if (value === 'Single') updateField('maritalStatus', 'Single');
@@ -489,12 +380,13 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
     }
   };
 
-  const updateTaxProfile = (key: keyof RegisterFormData['taxProfile']) => {
+  const updateTaxProfile = (key) => {
     setFormData((prev) => {
       const currentlySelected = !!prev.taxProfile[key];
 
       if (key === 'unemployed') {
         const nextUnemployed = !currentlySelected;
+
         return {
           ...prev,
           taxProfile: {
@@ -523,7 +415,7 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
     });
   };
 
-  const renderStepHeader = (title: string, subtitle?: string) => (
+  const renderStepHeader = (title, subtitle) => (
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionTitle}>{title}</Text>
       {!!subtitle && <Text style={styles.sectionSubtitle}>{subtitle}</Text>}
@@ -542,7 +434,7 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
     keyboardType,
     autoCapitalize,
     autoCorrect = false,
-  }: any) => (
+  }) => (
     <View style={styles.field} onLayout={fieldKey ? setFieldRef(fieldKey) : undefined}>
       {!!label && <Text style={styles.label}>{label}</Text>}
       <TextInput
@@ -578,7 +470,7 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
     onToggleVisibility,
     error,
     fieldKey,
-  }: any) => (
+  }) => (
     <View style={styles.field} onLayout={fieldKey ? setFieldRef(fieldKey) : undefined}>
       {!!label && <Text style={styles.label}>{label}</Text>}
       <View style={[styles.passwordWrap, !!error && styles.inputError]}>
@@ -615,7 +507,7 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
     placeholder,
     error,
     fieldKey,
-  }: any) => (
+  }) => (
     <View style={styles.field} onLayout={fieldKey ? setFieldRef(fieldKey) : undefined}>
       {!!label && <Text style={styles.label}>{label}</Text>}
       <TouchableOpacity
@@ -626,10 +518,7 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
             options,
             value,
             fieldKey,
-            onSelect: (selected) => {
-              if (fieldKey) clearFieldError(fieldKey);
-              onValueChange?.(selected);
-            },
+            onSelect: (selected) => onValueChange?.(selected),
           })
         }
       >
@@ -641,7 +530,7 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
     </View>
   );
 
-  const renderDateField = ({ label, value, onPress, error, fieldKey }: any) => (
+  const renderDateField = ({ label, value, onPress, error, fieldKey }) => (
     <View style={styles.field} onLayout={fieldKey ? setFieldRef(fieldKey) : undefined}>
       {!!label && <Text style={styles.label}>{label}</Text>}
       <TouchableOpacity
@@ -660,12 +549,7 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
     </View>
   );
 
-  const renderTaxCard = (
-    item: any,
-    selected: boolean,
-    onPress: () => void,
-    disabled = false
-  ) => (
+  const renderTaxCard = (item, selected, onPress, disabled = false) => (
     <TouchableOpacity
       key={item.key}
       onPress={onPress}
@@ -707,8 +591,8 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
     );
   };
 
-  const validateStep = (step: number) => {
-    const nextErrors: Record<string, string> = {};
+  const validateStep = (step) => {
+    const nextErrors = {};
     const needsSpouse =
       formData.maritalStatus === 'Married' ||
       formData.maritalStatus === 'Common-Law';
@@ -717,35 +601,45 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
       if (!formData.firstName.trim()) nextErrors.firstName = 'First name is required.';
       if (!formData.lastName.trim()) nextErrors.lastName = 'Last name is required.';
       if (!isValidEmail(formData.email)) nextErrors.email = 'Enter a valid email address.';
+
       if (formData.phone.replace(/\D/g, '').length !== 10) {
         nextErrors.phone = 'Enter a valid phone number.';
       }
+
       if (formData.password.length < 8) {
         nextErrors.password = 'Password must be at least 8 characters.';
       }
+
       if (formData.password !== formData.confirmPassword) {
         nextErrors.confirmPassword = 'Passwords do not match.';
       }
     }
 
     if (step === 2) {
-      if (!formData.dateOfBirth) nextErrors.dateOfBirth = 'Date of birth is required.';
+      if (!formData.dateOfBirth) {
+        nextErrors.dateOfBirth = 'Date of birth is required.';
+      }
+
       if (formData.dateOfBirth && calculateAge(formData.dateOfBirth) < 18) {
         nextErrors.dateOfBirth = 'You must be at least 18 years old.';
       }
-      if (!formData.address.trim()) nextErrors.address = 'Address is required.';
-      if (!formData.province) nextErrors.province = 'Province is required.';
-      if (!formData.city.trim()) nextErrors.city = 'City is required.';
-      if (formData.postalCode.replace(/\s/g, '').length < 6) {
-        nextErrors.postalCode = 'Postal code is required.';
+
+      if (!formData.addressData?.formattedAddress) {
+        nextErrors.address = 'Please select a valid address';
       }
+
       if (!formData.maritalStatus) {
         nextErrors.maritalStatus = 'Family status is required.';
       }
 
       if (needsSpouse) {
-        if (!formData.spouseName.trim()) nextErrors.spouseName = 'Spouse name is required.';
-        if (!formData.spouseDob) nextErrors.spouseDob = 'Spouse date of birth is required.';
+        if (!formData.spouseName.trim()) {
+          nextErrors.spouseName = 'Spouse name is required.';
+        }
+
+        if (!formData.spouseDob) {
+          nextErrors.spouseDob = 'Spouse date of birth is required.';
+        }
       }
     }
 
@@ -753,9 +647,11 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
       if (!formData.employmentStatus) {
         nextErrors.employmentStatus = 'Employment status is required.';
       }
+
       if (!formData.taxFilingStatus) {
         nextErrors.taxFilingStatus = 'Tax filing status is required.';
       }
+
       if (!Object.values(formData.taxProfile).some(Boolean)) {
         nextErrors.taxProfile = 'Select at least one tax profile option.';
       }
@@ -764,6 +660,7 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
         if (!Object.values(formData.spouseTaxProfile).some(Boolean)) {
           nextErrors.spouseTaxProfile = 'Select at least one spouse tax profile option.';
         }
+
         if (!formData.spouseEmploymentStatus) {
           nextErrors.spouseEmploymentStatus = 'Spouse employment status is required.';
         }
@@ -774,19 +671,24 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
       if (hasEmployment && !formData.employerName.trim()) {
         nextErrors.employerName = 'Employer name is required.';
       }
+
       if (hasGigWork && !formData.averageWeeklyKm.trim()) {
         nextErrors.averageWeeklyKm = 'Average weekly KM is required.';
       }
+
       if (hasSelfEmployment && !formData.contractType.trim()) {
         nextErrors.contractType = 'Contract type / service is required.';
       }
+
       if (hasBusiness) {
         if (!formData.businessName.trim()) {
           nextErrors.businessName = 'Business name is required.';
         }
+
         if (!formData.businessType) {
           nextErrors.businessType = 'Business type is required.';
         }
+
         if (!formData.businessNumber.trim()) {
           nextErrors.businessNumber = 'Business number is required.';
         }
@@ -797,36 +699,47 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
       if (!formData.vehicleInfo.ownerPerson) {
         nextErrors.vehicleOwnerPerson = 'Select who bought the vehicle.';
       }
+
       if (!formData.vehicleInfo.ownershipType) {
         nextErrors.vehicleOwnershipType = 'Select the ownership type.';
       }
+
       if (!formData.vehicleInfo.mainUse) {
         nextErrors.vehicleMainUse = 'Select the main vehicle use.';
       }
+
       if (!formData.vehicleInfo.purchaseDate) {
         nextErrors.vehiclePurchaseDate = 'Purchase date is required.';
       }
+
       if (!formData.vehicleInfo.purchasePrice) {
         nextErrors.vehiclePurchasePrice = 'Purchase price is required.';
       }
+
       if (!formData.vehicleInfo.gstHstPaid) {
         nextErrors.vehicleGstHstPaid = 'GST / HST amount is required.';
       }
     }
 
     if (step === 6) {
-      if (!formData.agreeToTerms) nextErrors.agreeToTerms = 'You must agree to the terms.';
+      if (!formData.agreeToTerms) {
+        nextErrors.agreeToTerms = 'You must agree to the terms.';
+      }
+
       if (!formData.agreeToPrivacy) {
         nextErrors.agreeToPrivacy = 'You must agree to the privacy policy.';
       }
+
       if (!formData.confirmAccuracy) {
         nextErrors.confirmAccuracy = 'Please confirm your information is accurate.';
       }
     }
 
     setFieldErrors(nextErrors);
+
     const firstField = Object.keys(nextErrors)[0];
     if (firstField) scrollToField(firstField);
+
     return Object.keys(nextErrors).length === 0;
   };
 
@@ -852,6 +765,7 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
         ref={scrollRef}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {currentStep === 1 && (
           <AccountStep
@@ -889,14 +803,9 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
             setShowSpouseDobPicker={setShowSpouseDobPicker}
             formatDate={formatDate}
             formatPhoneNumber={formatPhoneNumber}
-            formatPostalCode={formatPostalCode}
             setFieldRef={setFieldRef}
             setFormData={setFormData}
-            customCity={customCity}
-            setCustomCity={setCustomCity}
             scrollToField={scrollToField}
-            provinces={provinces}
-            provinceCities={provinceCities}
             taxFilingStatuses={taxFilingStatuses}
             syncFamilyAndFilingStatus={syncFamilyAndFilingStatus}
             dependentOptions={dependentOptions}
@@ -990,7 +899,7 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
           options={selectorOptions}
           value={selectorValue}
           onClose={() => setSelectorVisible(false)}
-          onSelect={(selected: any) => {
+          onSelect={(selected) => {
             selectorOnChange?.(selected);
             setSelectorVisible(false);
           }}
@@ -1046,7 +955,7 @@ const RegisterScreen = ({ navigation }: { navigation: any }) => {
                 onPress: () => navigation.navigate('Login'),
               },
             ]);
-          } catch (error: any) {
+          } catch (error) {
             Alert.alert(
               'Registration Failed',
               error?.message || 'Something went wrong while creating your account.'

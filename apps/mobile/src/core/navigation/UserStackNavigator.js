@@ -14,6 +14,7 @@ import CAListScreen from '@/features/ca-directory/screens/CAListScreen';
 import CAProfileScreen from '@/features/ca-portal/profile/screens/CAProfileScreen';
 import CRAUpdatesScreen from '@/features/cra/screens/CRAUpdatesScreen';
 import TaxExtractionReviewScreen from '@/features/tax/screens/TaxExtractionReviewScreen';
+import CAAvailabilityScreen from '@/features/availability/screens/CAAvailabilityScreen';
 
 const Stack = createStackNavigator();
 
@@ -53,6 +54,10 @@ const UserStackNavigator = () => {
       <Stack.Screen
         name="CAProfile"
         component={CAProfileScreen}
+      />
+      <Stack.Screen
+        name="CAAvailability"
+        component={CAAvailabilityScreen}
       />
 
       {/* 🔥 CRA UPDATES */}

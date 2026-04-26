@@ -166,6 +166,7 @@ const buildPayload = (body = {}) => {
       province: normalizeProvince(body.firmDetails?.province),
       postalCode: body.firmDetails?.postalCode ?? '',
       country: body.firmDetails?.country ?? 'Canada',
+      addressData: body.firmDetails?.addressData || null,
       firmPhone: normalizePhone(body.firmDetails?.firmPhone ?? ''),
       firmEmail: body.firmDetails?.firmEmail ?? '',
       firmSize: body.firmDetails?.firmSize ?? 'Solo',
@@ -473,7 +474,13 @@ const validateSubmission = (registration) => {
 };
 
 const syncProfileFromRegistration = async (registration, userId) => {
-  const coordinates = [-79.3832, 43.6532];
+  const lng = registration.firmDetails?.addressData?.lng;
+  const lat = registration.firmDetails?.addressData?.lat;
+
+  const coordinates =
+    Number.isFinite(Number(lng)) && Number.isFinite(Number(lat))
+      ? [Number(lng), Number(lat)]
+      : [-79.3832, 43.6532];
 
   const languages = normalizeLanguages(
     registration.professionalInformation?.languagesSpoken || []
@@ -515,7 +522,12 @@ const syncProfileFromRegistration = async (registration, userId) => {
         city: registration.firmDetails?.city || '',
         province: registration.firmDetails?.province || '',
         postalCode: registration.firmDetails?.postalCode || '',
-        country: registration.firmDetails?.country || 'Canada'
+        country: registration.firmDetails?.country || 'Canada',
+        formattedAddress:
+          registration.firmDetails?.addressData?.formattedAddress || '',
+        placeId: registration.firmDetails?.addressData?.placeId || '',
+        lat: registration.firmDetails?.addressData?.lat || null,
+        lng: registration.firmDetails?.addressData?.lng || null
       },
       location: {
         type: 'Point',

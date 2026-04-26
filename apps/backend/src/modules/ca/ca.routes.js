@@ -5,6 +5,7 @@ const { protect, authorize } = require('../../shared/middleware/auth.middleware'
 const caController = require('./ca.controller');
 const caDirectoryController = require('./ca-directory.controller');
 const caCaseController = require('./ca-case.controller');
+const availabilityController = require('./ca-availability.controller');
 
 // Public routes
 router.get('/search', caDirectoryController.searchCAs);
@@ -45,6 +46,17 @@ router.patch(
   protect,
   authorize('ca', 'admin'),
   caController.respondToConnectionRequest
+);
+
+// PUBLIC - get CA availability
+router.get('/profile/:id/availability', availabilityController.getAvailability);
+
+// CA updates their availability
+router.put(
+  '/availability',
+  protect,
+  authorize('ca'),
+  availabilityController.updateAvailability
 );
 
 module.exports = router;

@@ -1,266 +1,173 @@
 import { Home, Phone, Mail } from 'lucide-react';
 import ErrorField from './ErrorField';
-import { PROVINCES as provinces } from '@shared/caRegistration/options';
-
-const getOptionValue = (option) => {
-  if (typeof option === 'string') return option;
-
-  return (
-    option?.value ??
-    option?.code ??
-    option?.id ??
-    option?.key ??
-    option?.name ??
-    option?.label ??
-    ''
-  );
-};
-
-const getOptionLabel = (option) => {
-  if (typeof option === 'string') return option;
-
-  return (
-    option?.label ??
-    option?.name ??
-    option?.title ??
-    option?.value ??
-    option?.code ??
-    ''
-  );
-};
+import GoogleAddressInput from 'components/address/GoogleAddressInput';
 
 const FirmDetails = ({ formData, errors, handleChange }) => {
+  const handleAddressChange = (address) => {
+    handleChange({ target: { name: 'firmAddressData', value: address } });
+    handleChange({ target: { name: 'firmAddress', value: address.formattedAddress } });
+    handleChange({ target: { name: 'city', value: address.city } });
+    handleChange({ target: { name: 'province', value: address.province } });
+    handleChange({ target: { name: 'firmPostalCode', value: address.postalCode } });
+    handleChange({ target: { name: 'firmCountry', value: address.country } });
+  };
+
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold text-gray-800 mb-6">Firm Details</h3>
 
+      {/* ✅ GOOGLE ADDRESS */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Firm Address <span className="text-red-500">*</span>
         </label>
-        <div className="relative">
-          <Home
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-            size={18}
-          />
-          <input
-            type="text"
-            name="firmAddress"
-            value={formData.firmAddress}
-            onChange={handleChange}
-            className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-              errors.firmAddress
-                ? 'border-red-500 focus:ring-red-200 bg-red-50'
-                : 'border-gray-300 focus:ring-primary-200 focus:border-primary-500'
-            }`}
-            placeholder="123 Business Street"
-          />
-        </div>
+
+        <GoogleAddressInput
+          value={formData.firmAddressData}
+          onChange={handleAddressChange}
+        />
+
         <ErrorField error={errors.firmAddress} />
       </div>
 
+      {/* ✅ AUTO FILLED (READ ONLY) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            City <span className="text-red-500">*</span>
+            City
           </label>
           <input
-            type="text"
-            name="city"
-            value={formData.city}
-            onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-              errors.city
-                ? 'border-red-500 focus:ring-red-200 bg-red-50'
-                : 'border-gray-300 focus:ring-primary-200 focus:border-primary-500'
-            }`}
-            placeholder="Toronto"
+            value={formData.city || ''}
+            disabled
+            className="w-full px-3 py-2 bg-gray-100 border rounded-lg"
           />
-          <ErrorField error={errors.city} />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Province <span className="text-red-500">*</span>
+            Province
           </label>
-          <select
-            name="province"
-            value={formData.province}
-            onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-              errors.province
-                ? 'border-red-500 focus:ring-red-200 bg-red-50'
-                : 'border-gray-300 focus:ring-primary-200 focus:border-primary-500'
-            }`}
-          >
-            <option value="">Province</option>
-            {provinces.map((prov, index) => {
-              const value = getOptionValue(prov);
-              const label = getOptionLabel(prov);
-              const optionKey = `${value || label || 'province'}-${index}`;
-
-              return (
-                <option key={optionKey} value={value}>
-                  {label}
-                </option>
-              );
-            })}
-          </select>
-          <ErrorField error={errors.province} />
+          <input
+            value={formData.province || ''}
+            disabled
+            className="w-full px-3 py-2 bg-gray-100 border rounded-lg"
+          />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Postal Code <span className="text-red-500">*</span>
+            Postal Code
           </label>
           <input
-            type="text"
-            name="firmPostalCode"
-            value={formData.firmPostalCode}
-            onChange={handleChange}
-            maxLength={7}
-            autoCapitalize="characters"
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-              errors.firmPostalCode
-                ? 'border-red-500 focus:ring-red-200 bg-red-50'
-                : 'border-gray-300 focus:ring-primary-200 focus:border-primary-500'
-            }`}
-            placeholder="A1A 1A1"
+            value={formData.firmPostalCode || ''}
+            disabled
+            className="w-full px-3 py-2 bg-gray-100 border rounded-lg"
           />
-          <ErrorField error={errors.firmPostalCode} />
         </div>
       </div>
 
+      {/* COUNTRY */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Firm Country
         </label>
         <input
-          type="text"
-          name="firmCountry"
-          value={formData.firmCountry}
+          value={formData.firmCountry || 'Canada'}
           disabled
           className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-500"
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Firm Phone <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <Phone
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={18}
-            />
-            <input
-              type="tel"
-              name="firmPhone"
-              value={formData.firmPhone}
-              onChange={handleChange}
-              className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                errors.firmPhone
-                  ? 'border-red-500 focus:ring-red-200 bg-red-50'
-                  : 'border-gray-300 focus:ring-primary-200 focus:border-primary-500'
-              }`}
-              placeholder="(416) 555-0123"
-            />
-          </div>
-          <ErrorField error={errors.firmPhone} />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Firm Email <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <Mail
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={18}
-            />
-            <input
-              type="email"
-              name="firmEmail"
-              value={formData.firmEmail}
-              onChange={handleChange}
-              className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                errors.firmEmail
-                  ? 'border-red-500 focus:ring-red-200 bg-red-50'
-                  : 'border-gray-300 focus:ring-primary-200 focus:border-primary-500'
-              }`}
-              placeholder="info@firm.ca"
-            />
-          </div>
-          <ErrorField error={errors.firmEmail} />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Firm Size
-          </label>
-          <select
-            name="firmSize"
-            value={formData.firmSize}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-500"
-          >
-            <option value="">Select size</option>
-            <option value="Solo">Solo Practitioner</option>
-            <option value="Small">Small (2-5 professionals)</option>
-            <option value="Medium">Medium (6-20 professionals)</option>
-            <option value="Large">Large (21+ professionals)</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Number of Partners
-          </label>
-          <input
-            type="number"
-            name="numberOfPartners"
-            value={formData.numberOfPartners}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-500"
-            min="0"
-            placeholder="0"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Number of Staff
-          </label>
-          <input
-            type="number"
-            name="numberOfStaff"
-            value={formData.numberOfStaff}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-500"
-            min="0"
-            placeholder="0"
-          />
-        </div>
-      </div>
-
+      {/* PHONE */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Year Established
+          Firm Phone <span className="text-red-500">*</span>
         </label>
+        <div className="relative">
+          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="tel"
+            name="firmPhone"
+            value={formData.firmPhone}
+            onChange={handleChange}
+            className={`w-full pl-10 pr-4 py-2 border rounded-lg ${
+              errors.firmPhone ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="(416) 555-0123"
+          />
+        </div>
+        <ErrorField error={errors.firmPhone} />
+      </div>
+
+      {/* EMAIL */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Firm Email <span className="text-red-500">*</span>
+        </label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="email"
+            name="firmEmail"
+            value={formData.firmEmail}
+            onChange={handleChange}
+            className={`w-full pl-10 pr-4 py-2 border rounded-lg ${
+              errors.firmEmail ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="info@firm.ca"
+          />
+        </div>
+        <ErrorField error={errors.firmEmail} />
+      </div>
+
+      {/* SIZE */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Firm Size
+        </label>
+        <select
+          name="firmSize"
+          value={formData.firmSize}
+          onChange={handleChange}
+          className="w-full px-3 py-2 border rounded-lg"
+        >
+          <option value="">Select size</option>
+          <option value="Solo">Solo Practitioner</option>
+          <option value="Small">Small (2-5 professionals)</option>
+          <option value="Medium">Medium (6-20 professionals)</option>
+          <option value="Large">Large (21+ professionals)</option>
+        </select>
+      </div>
+
+      {/* NUMBERS */}
+      <div className="grid grid-cols-2 gap-4">
         <input
           type="number"
-          name="yearEstablished"
-          value={formData.yearEstablished}
+          name="numberOfPartners"
+          value={formData.numberOfPartners}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-500"
-          min="1900"
-          max={new Date().getFullYear()}
-          placeholder="2005"
+          placeholder="Partners"
+          className="w-full px-3 py-2 border rounded-lg"
+        />
+
+        <input
+          type="number"
+          name="numberOfStaff"
+          value={formData.numberOfStaff}
+          onChange={handleChange}
+          placeholder="Staff"
+          className="w-full px-3 py-2 border rounded-lg"
         />
       </div>
+
+      <input
+        type="number"
+        name="yearEstablished"
+        value={formData.yearEstablished}
+        onChange={handleChange}
+        placeholder="Year Established"
+        className="w-full px-3 py-2 border rounded-lg"
+      />
     </div>
   );
 };

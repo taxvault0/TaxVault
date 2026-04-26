@@ -57,6 +57,7 @@ const ConsultationRequest = () => {
     preferredDates: location.state?.date ? [location.state.date] : [],
     selectedDate: location.state?.date || '',
     selectedTime: location.state?.time || '',
+    slotId: location.state?.slotId || location.state?.slot?.id || location.state?.slot?._id || '', // 🔥 ADD
     attachments: [],
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   });
@@ -181,25 +182,44 @@ const ConsultationRequest = () => {
   ].filter(Boolean);
 
   const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      const requestData = {
-        ...formData,
-        caId,
-        estimatedTotal: pricing.total,
-        taxProfile,
-        businessName: user?.businessName || '',
-        clientName: user?.name || '',
-      };
+  setLoading(true);
 
-      const response = await consultationService.createRequest(requestData);
-      navigate(`/consultations/${response?.data?.id || 'new-request'}`);
-    } catch (error) {
-      console.error('Error creating request:', error);
-    } finally {
-      setLoading(false);
+  try {
+    const requestData = {
+      ...formData,
+      caId,
+      slotId: formData.slotId,
+      estimatedTotal: pricing.total,
+      taxProfile,
+      businessName: user?.businessName || '',
+      clientName: user?.name || '',
+    };
+
+    const response = await consultationService.createRequest(requestData);
+
+    const consultationId =
+      response?.data?.consultation?._id ||
+      response?.data?.consultation?.id ||
+      response?.data?.id ||
+      'new-request';
+
+    navigate(`/consultations/${consultationId}`);
+  } catch (error) {
+    console.error('Error creating request:', error);
+
+    const message =
+      error.response?.data?.message ||
+      'Could not create consultation request. Please try again.';
+
+    alert(message);
+
+    if (error.response?.status === 409) {
+      navigate(`/ca/${caId}/availability`);
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   const Step1 = () => (
     <div className="space-y-6">

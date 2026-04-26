@@ -85,6 +85,7 @@ const mapDraftPayload = (body = {}) => {
       province: normalizeUpper(body.firmDetails.province || 'ON'),
       postalCode: normalizePostalCode(body.firmDetails.postalCode),
       country: normalizeString(body.firmDetails.country || 'Canada'),
+      addressData: body.firmDetails.addressData || null,
       firmPhone: normalizePhone(body.firmDetails.firmPhone),
       firmEmail: normalizeString(body.firmDetails.firmEmail).toLowerCase(),
       firmSize: normalizeString(body.firmDetails.firmSize),

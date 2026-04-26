@@ -75,15 +75,6 @@ const normalizeFieldValue = (field, value) => {
 
 const mapStepErrorsForMobile = (stepErrors = {}) => {
   const mapped = { ...stepErrors };
-
-  if (mapped.caCertificateFile) {
-    mapped.caCertificateFile = mapped.caCertificateFile;
-  }
-
-  if (mapped.authorizeCredentialCheck) {
-    mapped.authorizeCredentialCheck = mapped.authorizeCredentialCheck;
-  }
-
   return mapped;
 };
 
@@ -139,6 +130,7 @@ const buildStepPayload = (step, data) => {
           province: data.province,
           postalCode: data.firmPostalCode,
           country: data.firmCountry,
+          addressData: data.firmAddressData || null,
           firmPhone: data.firmPhone,
           firmEmail: data.firmEmail,
           firmSize:
@@ -147,10 +139,10 @@ const buildStepPayload = (step, data) => {
               : data.firmSize === 'medium'
               ? 'Medium'
               : data.firmSize === 'large'
-                ? 'Large'
-                : data.firmSize === 'solo'
-                  ? 'Solo'
-                  : data.firmSize || 'Solo',
+              ? 'Large'
+              : data.firmSize === 'solo'
+              ? 'Solo'
+              : data.firmSize || 'Solo',
           numberOfPartners: data.numberOfPartners,
           numberOfStaff: data.numberOfStaff,
           yearEstablished: data.yearEstablished,
@@ -228,7 +220,9 @@ const buildStepPayload = (step, data) => {
     case 6:
       return {
         specialtiesAndTechnology: {
-          taxSpecialties: Array.isArray(data.taxSpecialties) ? data.taxSpecialties : [],
+          taxSpecialties: Array.isArray(data.taxSpecialties)
+            ? data.taxSpecialties
+            : [],
           provincialSpecialties: Array.isArray(data.provincialSpecialties)
             ? data.provincialSpecialties
             : [],
@@ -363,6 +357,7 @@ const RegisterCAScreen = () => {
 
   const [form, setForm] = useState({
     ...caRegistrationInitialValues,
+    firmAddressData: caRegistrationInitialValues.firmAddressData || null,
     primaryPhone:
       caRegistrationInitialValues.primaryPhone ||
       caRegistrationInitialValues.phone ||
@@ -393,10 +388,35 @@ const RegisterCAScreen = () => {
     setErrors((prev) => {
       const next = { ...prev };
       delete next[field];
+
+      if (field === 'firmAddressData') {
+        delete next.firmAddress;
+        delete next.city;
+        delete next.province;
+        delete next.firmPostalCode;
+      }
+
+      if (field === 'firmAddress') {
+        delete next.firmAddress;
+      }
+
+      if (field === 'city') {
+        delete next.city;
+      }
+
+      if (field === 'province') {
+        delete next.province;
+      }
+
+      if (field === 'firmPostalCode') {
+        delete next.firmPostalCode;
+      }
+
       if (field === 'primaryPhone' || field === 'phone') {
         delete next.phone;
         delete next.primaryPhone;
       }
+
       return next;
     });
 
@@ -574,6 +594,7 @@ const RegisterCAScreen = () => {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.card}>
           {!!formError && (

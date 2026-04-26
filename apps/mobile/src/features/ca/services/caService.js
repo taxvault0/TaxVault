@@ -94,6 +94,19 @@ const caService = {
 
     return items.map(normalizeCA);
   },
+  getCAAvailability: async (id, days = 30) => {
+  const response = await api.get(`/ca/profile/${id}/availability`, {
+    params: { days },
+  });
+
+  const slots =
+    response?.data?.data?.slots ||
+    response?.data?.slots ||
+    response?.data?.availability ||
+    [];
+
+  return Array.isArray(slots) ? slots : [];
+},
 
   getCAById: async (id) => {
     const response = await api.get(`/ca/profile/${id}`);
